@@ -52,7 +52,7 @@ typedef unsigned long long e_bytes; // 64 bits
 
 /* data Chunk */
 typedef struct Data_Chunk {
-    o_byte chunkID[4]; // "data"
+    char chunkID[4]; // "data"
     f_bytes chunk_size;
     // FIX: Get it to work with the struct!
     // double* sampled_data;
@@ -61,14 +61,14 @@ typedef struct Data_Chunk {
 
 /* fact Chunk */
 typedef struct Fact_Chunk {
-    o_byte chunkID[4]; // "fact"
+    char chunkID[4]; // "fact"
     f_bytes chunk_size;
     f_bytes dwSampleLength;
 }fact_chunk_t;
 
 /* Basic format chunk */
 typedef struct Format_chunk {
-    o_byte chunkID[4]; // "fmt "
+    char chunkID[4]; // "fmt "
     f_bytes chunk_size;
     t_bytes wFormatTag;
     t_bytes nChannels;
@@ -86,7 +86,7 @@ typedef struct Format_chunk {
 
 /* Main RIFF chunk */
 typedef struct RIFF_Chunk {
-    o_byte chunkID[4]; // "RIFF"
+    char chunkID[4]; // "RIFF"
     f_bytes chunk_size;  // Number of chunks containing sample and format information 
     char waveID[4]; // "WAVE"
 }riff_chunk_t;
@@ -99,4 +99,14 @@ typedef struct Wave_Properties {
     unsigned long long total_number_of_samples;
     float a; // amplitude
     unsigned long long size;
+    o_byte channels;
+    o_byte bytes_per_sample;
 }wave_prop_t;
+
+void create_sine_64bit_float(double* samples, wave_prop_t* wave_prop);
+void create_clipped_sine_64bit_float(double* samples, wave_prop_t* wave_prop);
+void set_defaults(wave_prop_t* wave_prop);
+int get_options(int* argc, char** argv, wave_prop_t* wave_prop);
+void output_file_details(wave_prop_t* wave_prop);
+void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
+
