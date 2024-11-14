@@ -1,27 +1,27 @@
 #include "swavgen.h"
-#include <string.h>
+#include <stdio.h>
 
-void create_sine_64bit_float(double* samples, wave_prop_t* wave_prop) {
+void create_sine_64bit_float(void* samples, wave_prop_t* wave_prop) {
     for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        samples[n] = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+        ((double*)samples)[n] = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
     }
 }
 
-void create_sine_16bit_PCM(short* samples, wave_prop_t* wave_prop) {
+void create_sine_16bit_PCM(void* samples, wave_prop_t* wave_prop) {
     const short pcm_max = (2 << ((sizeof(short) * 8) - 2)) - 1;
     for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        samples[n] = pcm_max * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+        ((short*)samples)[n] = pcm_max * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
     }
 }
 
-void create_clipped_sine_64bit_float(double* samples, wave_prop_t* wave_prop) {
+void create_clipped_sine_64bit_float(void* samples, wave_prop_t* wave_prop) {
     double sample;
     for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
         sample = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
         if (sample >= 1) {
-            samples[n] = 1;
+            ((double*)samples)[n] = 1;
         } else {
-            samples[n] = sample;
+            ((double*)samples)[n] = sample;
         }
     }
 }
@@ -39,10 +39,11 @@ void set_defaults(wave_prop_t* wave_prop) {
     wave_prop->encoding = 'f'; // IEEE float
 }
 
-void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, data_chunk_t *data_chunk) {
+void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
 
     wave_prop->bytes_per_sample = 2;
-    
+    fact_chunk = (fact_chunk_t*) NULL;
+
     /* RIFF Chunk */
     strcpy(riff_chunk->chunkID, "RIFF");
     strcpy(riff_chunk->waveID, "WAVE");
@@ -54,7 +55,7 @@ void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_
     fmt_chunk->nChannels = wave_prop->channels;
     fmt_chunk->nSamplesPerSec = wave_prop->f_s;
     fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample, // 16 bit data
-    fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
+        fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
 
     /* Data Chunk */
@@ -63,7 +64,7 @@ void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_
 }
 
 void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
-    
+
     /* RIFF Chunk */
     strcpy(riff_chunk->chunkID, "RIFF");
     strcpy(riff_chunk->waveID, "WAVE");
@@ -75,7 +76,7 @@ void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_
     fmt_chunk->nChannels = wave_prop->channels;
     fmt_chunk->nSamplesPerSec = wave_prop->f_s;
     fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample, // 64 bit data
-    fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
+        fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
 
     /* Fact Chunk */
@@ -89,7 +90,7 @@ void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_
 }
 
 int get_wave_type(char* str, wave_prop_t* wave_prop) {
-    
+
     if (!(strcmp("sine", str))) {
         wave_prop->type = 's';
         return 0;
@@ -112,7 +113,7 @@ int get_wave_type(char* str, wave_prop_t* wave_prop) {
 }
 
 int get_encoding(char* str, wave_prop_t* wave_prop) {
-    
+
     if (!(strcmp("PCM", str))) {
         wave_prop->encoding = 'p';
         return 0;
@@ -181,6 +182,36 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
         }
     }
     return 0;
+}
+
+void set_encoding_type(wave_prop_t* wave_prop) {
+    switch (wave_prop->encoding) {
+        case 'p':
+            wave_prop->encd = &set_pcm;
+            switch (wave_prop->type) {
+                case 's':
+                    wave_prop->wave = &create_sine_16bit_PCM;
+                    break;
+                default:
+                    printf("Entered default wave type\n");
+                    break;
+            }
+            break;
+        case 'f':
+            wave_prop->encd = &set_ieee_float;
+            switch (wave_prop->type) {
+                case 's':
+                    wave_prop->wave = &create_sine_64bit_float;
+                    break;
+                default:
+                    printf("Entered default wave type\n");
+                    break;
+            }
+            break;
+        default:
+            printf("Entered default encoding.\n");
+            break;
+    } 
 }
 
 void output_file_details(wave_prop_t* wave_prop) {

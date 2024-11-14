@@ -1,4 +1,5 @@
 #include "swavgen.h"
+#include <stdio.h>
 
 // TODO: Use other types of encoding, A law, mu law, PCM
 // TODO: Make other waves, square, triangle, saw, clipped sine.
@@ -20,17 +21,17 @@ int main (int argc, char** argv) {
         printf("Error opening file...exiting.");
         return 1;
     }
+    
+    /* Set the encoding and wave type based on inputs */
+    set_encoding_type(&wave_prop);
 
-    set_ieee_float(&wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
+    /* Prepare the chunks based on the encoding */
+    wave_prop.encd(&wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
 
-    set_pcm(&wave_prop, &riff_chunk, &fmt_chunk, &data_chunk);
-
-    /* Create the sine wave */
+    /* Create the wave */
+    // TODO: find a way to avoid having an if-statement to create the array...allocate inside function?
     double* sampled_data = (double*) malloc(wave_prop.total_number_of_samples * sizeof(double));
-    create_sine_64bit_float(sampled_data, &wave_prop);
-
-    short* sampled_data = (short*) malloc(wave_prop.total_number_of_samples * sizeof(double));
-    create_sine_16bit_PCM(sampled_data, &wave_prop);
+    wave_prop.wave(sampled_data, &wave_prop);
 
     /* Once everything has been set, decide on the main chunk size */
     riff_chunk.chunk_size = sizeof(riff_chunk.waveID) + sizeof(fmt_chunk) + sizeof(data_chunk) + (wave_prop.total_number_of_samples * sizeof(sampled_data));

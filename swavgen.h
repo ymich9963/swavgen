@@ -106,17 +106,18 @@ typedef struct Wave_Properties {
     char type;
     char encoding;
     void (*defv)(wave_prop_t*); // Set default values 
-    void (*encd)(wave_prop_t*); // Encoding 
-    void (*wave)(wave_prop_t*); // Wave generation function 
+    void (*encd)(wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Encoding 
+    void (*wave)(void*, wave_prop_t*); // Wave generation function 
     void (*outp)(wave_prop_t*); // Output function
 }wave_prop_t;
 
-void create_sine_16bit_PCM(short* samples, wave_prop_t* wave_prop);
-void create_sine_64bit_float(double* samples, wave_prop_t* wave_prop);
-void create_clipped_sine_64bit_float(double* samples, wave_prop_t* wave_prop);
+void create_sine_16bit_PCM(void* samples, wave_prop_t* wave_prop);
+void create_sine_64bit_float(void* samples, wave_prop_t* wave_prop);
+void create_clipped_sine_64bit_float(void* samples, wave_prop_t* wave_prop);
 void set_defaults(wave_prop_t* wave_prop);
+void set_encoding_type(wave_prop_t* wave_prop);
 int get_options(int* argc, char** argv, wave_prop_t* wave_prop);
 void output_file_details(wave_prop_t* wave_prop);
-void set_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, data_chunk_t* data_chunk);
+void set_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 
