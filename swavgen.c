@@ -7,6 +7,13 @@ void create_sine_64bit_float(double* samples, wave_prop_t* wave_prop) {
     }
 }
 
+void create_sine_16bit_PCM(short* samples, wave_prop_t* wave_prop) {
+    const short pcm_max = (2 << ((sizeof(short) * 8) - 2)) - 1;
+    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        samples[n] = pcm_max * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+    }
+}
+
 void create_clipped_sine_64bit_float(double* samples, wave_prop_t* wave_prop) {
     double sample;
     for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
@@ -22,12 +29,37 @@ void create_clipped_sine_64bit_float(double* samples, wave_prop_t* wave_prop) {
 void set_defaults(wave_prop_t* wave_prop) {
     strcpy(wave_prop->file_name, "wav.wav");
     wave_prop->a = 1;
-    wave_prop->duration = 2.0;
+    wave_prop->duration = 2.0; // seconds
     wave_prop->f_s = 48000; // sample rate
     wave_prop->f = 800; // sine wave frequency
     wave_prop->total_number_of_samples = wave_prop->f_s * wave_prop->duration;
     wave_prop->channels = 1;
-    wave_prop->bytes_per_sample = 8;
+    wave_prop->bytes_per_sample = 8; // used in IEEE float format
+    wave_prop->type = 's'; // sine wave
+    wave_prop->encoding = 'f'; // IEEE float
+}
+
+void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, data_chunk_t *data_chunk) {
+
+    wave_prop->bytes_per_sample = 2;
+    
+    /* RIFF Chunk */
+    strcpy(riff_chunk->chunkID, "RIFF");
+    strcpy(riff_chunk->waveID, "WAVE");
+
+    /* Format Chunk */
+    strcpy(fmt_chunk->chunkID, "fmt ");
+    fmt_chunk->chunk_size = 16;
+    fmt_chunk->wFormatTag = WAVE_FORMAT_PCM;
+    fmt_chunk->nChannels = wave_prop->channels;
+    fmt_chunk->nSamplesPerSec = wave_prop->f_s;
+    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample, // 16 bit data
+    fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
+    fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
+
+    /* Data Chunk */
+    strcpy(data_chunk->chunkID, "data");
+    data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
 }
 
 void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
@@ -42,7 +74,7 @@ void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_
     fmt_chunk->wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
     fmt_chunk->nChannels = wave_prop->channels;
     fmt_chunk->nSamplesPerSec = wave_prop->f_s;
-    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample, // 64 bit data with 1 channe;
+    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample, // 64 bit data
     fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
 
@@ -56,6 +88,43 @@ void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_
     data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
 }
 
+int get_wave_type(char* str, wave_prop_t* wave_prop) {
+    
+    if (!(strcmp("sine", str))) {
+        wave_prop->type = 's';
+        return 0;
+    }
+    if (!(strcmp("square", str))) {
+        wave_prop->type = 'q';
+        return 0;
+    }
+    if (!(strcmp("triangle", str))) {
+        wave_prop->type = 't';
+        return 0;
+    }
+    if (!(strcmp("saw", str))) {
+        wave_prop->type = 'w';
+        return 0;
+    } else {
+        printf("Unknown wave type. Please enter either, 'sine', 'square', 'triangle', or 'saw'.");
+        return 1;
+    }
+}
+
+int get_encoding(char* str, wave_prop_t* wave_prop) {
+    
+    if (!(strcmp("PCM", str))) {
+        wave_prop->encoding = 'p';
+        return 0;
+    }
+    if (!(strcmp("IEEE-float", str))) {
+        wave_prop->encoding = 'f';
+        return 0;
+    } else {
+        printf("Unknown encoding. Please enter either, 'PCM 'or 'IEEE-float'.");
+        return 1;
+    }
+}
 int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
     unsigned long lval = 0;
     unsigned long long llval = 0;
@@ -63,6 +132,16 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
     char strval[MAX_FILE_NAME];
 
     for (int i = 1; i < *argc; i++) {
+        if (argv[i][0] != '-' && argv[i - 1][0] != '-') {
+            CHECK_RES(sscanf(argv[i], "%s", strval));
+            get_wave_type(strval, wave_prop);
+            continue;
+        }
+        if (!(strcmp("-e", argv[i])) || !(strcmp("--encoding", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%s", strval));
+            get_encoding(strval, wave_prop);
+            continue;
+        }
         if (!(strcmp("-f", argv[i])) || !(strcmp("--frequency", argv[i]))) {
             CHECK_RES(sscanf(argv[i + 1], "%ld", &lval));
             CHECK_LIMITS_LONG(lval);
