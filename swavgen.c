@@ -1,16 +1,18 @@
 #include "swavgen.h"
-#include <stdio.h>
 
-void create_sine_64bit_float(void* samples, wave_prop_t* wave_prop) {
+void create_sine_64bit_float(void** samples, wave_prop_t* wave_prop) {
+    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
     for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        ((double*)samples)[n] = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+        ((double*)*samples)[n] = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
     }
 }
 
-void create_sine_16bit_PCM(void* samples, wave_prop_t* wave_prop) {
+// FIX: PCM file doesn't play but float file does!
+void create_sine_16bit_PCM(void** samples, wave_prop_t* wave_prop) {
     const short pcm_max = (2 << ((sizeof(short) * 8) - 2)) - 1;
+    *samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short));
     for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        ((short*)samples)[n] = pcm_max * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+        ((short*)*samples)[n] = pcm_max * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
     }
 }
 

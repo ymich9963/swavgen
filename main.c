@@ -29,9 +29,8 @@ int main (int argc, char** argv) {
     wave_prop.encd(&wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
 
     /* Create the wave */
-    // TODO: find a way to avoid having an if-statement to create the array...allocate inside function?
-    double* sampled_data = (double*) malloc(wave_prop.total_number_of_samples * sizeof(double));
-    wave_prop.wave(sampled_data, &wave_prop);
+    void* sampled_data = NULL;
+    wave_prop.wave(&sampled_data, &wave_prop);
 
     /* Once everything has been set, decide on the main chunk size */
     riff_chunk.chunk_size = sizeof(riff_chunk.waveID) + sizeof(fmt_chunk) + sizeof(data_chunk) + (wave_prop.total_number_of_samples * sizeof(sampled_data));
