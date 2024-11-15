@@ -1,8 +1,7 @@
 #include "swavgen.h"
-#include <stdio.h>
 
-// TODO: Use other types of encoding, A law, mu law, PCM
-// TODO: Make other waves, square, triangle, saw, clipped sine.
+// TODO: Use other types of encoding, A law, mu law, PCM (8/24/32 signed/unsigned)
+// TODO: Make other waves, square, triangle, saw, clipped.
 
 int main (int argc, char** argv) {
 
