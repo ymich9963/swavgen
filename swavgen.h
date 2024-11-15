@@ -16,6 +16,8 @@
 #define LVAL_MIN 0
 #define FVAL_MAX 300.0f
 #define FVAL_MIN 0.1f
+#define PCM_MAX 32767
+#define PCM_MIN -32768
 
 /* Check macros */
 /* Check response from sscanf */
@@ -108,16 +110,19 @@ typedef struct Wave_Properties {
     void (*defv)(wave_prop_t*); // Set default values 
     void (*encd)(wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Encoding 
     void (*wave)(void**, wave_prop_t*); // Wave generation function 
-    void (*outp)(wave_prop_t*); // Output function
+    void (*outp)(FILE*, void*, wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Output function
 }wave_prop_t;
 
+void set_defaults(wave_prop_t* wave_prop);
+int get_options(int* argc, char** argv, wave_prop_t* wave_prop);
+void set_type_encoding(wave_prop_t* wave_prop);
+void set_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 void create_sine_16bit_PCM(void** samples, wave_prop_t* wave_prop);
+void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
+int get_wave_type(char* str, wave_prop_t* wave_prop);
 void create_sine_64bit_float(void** samples, wave_prop_t* wave_prop);
 void create_clipped_sine_64bit_float(void* samples, wave_prop_t* wave_prop);
-void set_defaults(wave_prop_t* wave_prop);
-void set_encoding_type(wave_prop_t* wave_prop);
-int get_options(int* argc, char** argv, wave_prop_t* wave_prop);
+void output_ieee_float(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
+void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
 void output_file_details(wave_prop_t* wave_prop);
-void set_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
-void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 

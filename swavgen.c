@@ -1,20 +1,5 @@
 #include "swavgen.h"
-
-void create_sine_64bit_float(void** samples, wave_prop_t* wave_prop) {
-    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
-    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        ((double*)*samples)[n] = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
-    }
-}
-
-// FIX: PCM file doesn't play but float file does!
-void create_sine_16bit_PCM(void** samples, wave_prop_t* wave_prop) {
-    const short pcm_max = (2 << ((sizeof(short) * 8) - 2)) - 1;
-    *samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short));
-    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        ((short*)*samples)[n] = pcm_max * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
-    }
-}
+#include <stdio.h>
 
 void create_clipped_sine_64bit_float(void* samples, wave_prop_t* wave_prop) {
     double sample;
@@ -57,12 +42,39 @@ void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_
     fmt_chunk->nChannels = wave_prop->channels;
     fmt_chunk->nSamplesPerSec = wave_prop->f_s;
     fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample, // 16 bit data
-        fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
+    fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
 
     /* Data Chunk */
     strcpy(data_chunk->chunkID, "data");
     data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
+}
+
+// FIX: PCM file doesn't play but float file does!
+void create_sine_16bit_PCM(void** samples, wave_prop_t* wave_prop) {
+    /* const short pcm_max = (1 << ((sizeof(short) * 8) - 1)) - 1; */
+    /* *samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short)); */
+    /* for (int n = 0; n < wave_prop->total_number_of_samples; n++) { */
+    /*     ((short*)*samples)[n] = pcm_max * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s); */
+    /* } */
+
+    /* const short PCM_MAX = (1 << ((sizeof(short) * 8) - 1)) - 1; */
+    /* const short PCM_MIN = (short)(1 << ((sizeof(short) * 8) - 1)); */
+
+    /* printf("%d\n", pcm_max); */
+    /* printf("%d\n", pcm_min); */
+
+    *samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short));
+    double sample;
+    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        ((short*)*samples)[n] = PCM_MAX * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+        /* sample = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s); */
+        /* if (sample >= 0) { */
+        /*     ((short*)*samples)[n] = PCM_MAX * sample; */
+        /* } else { */
+        /*     ((short*)*samples)[n] = -(PCM_MIN * sample); */
+        /* } */
+    }
 }
 
 void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
@@ -89,6 +101,13 @@ void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_
     /* Data Chunk */
     strcpy(data_chunk->chunkID, "data");
     data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
+}
+
+void create_sine_64bit_float(void** samples, wave_prop_t* wave_prop) {
+    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
+    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        ((double*)*samples)[n] = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+    }
 }
 
 int get_wave_type(char* str, wave_prop_t* wave_prop) {
@@ -186,10 +205,11 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
     return 0;
 }
 
-void set_encoding_type(wave_prop_t* wave_prop) {
+void set_type_encoding(wave_prop_t* wave_prop) {
     switch (wave_prop->encoding) {
         case 'p':
             wave_prop->encd = &set_pcm;
+            wave_prop->outp = &output_pcm;
             switch (wave_prop->type) {
                 case 's':
                     wave_prop->wave = &create_sine_16bit_PCM;
@@ -201,6 +221,7 @@ void set_encoding_type(wave_prop_t* wave_prop) {
             break;
         case 'f':
             wave_prop->encd = &set_ieee_float;
+            wave_prop->outp = &output_ieee_float;
             switch (wave_prop->type) {
                 case 's':
                     wave_prop->wave = &create_sine_64bit_float;
@@ -216,9 +237,40 @@ void set_encoding_type(wave_prop_t* wave_prop) {
     } 
 }
 
+void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+
+    riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * sizeof(((short*)sampled_data)[0]));
+
+    fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
+    fwrite(fmt_chunk,  sizeof(fmt_chunk_t),  1, file);
+    fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
+    fwrite(sampled_data, wave_prop->total_number_of_samples * sizeof(((short*)sampled_data)[0]), 1, file);
+
+    /* Padding added based on if the chunk size is odd or even */
+    if (data_chunk->chunk_size % 2 != 0) {
+        o_byte padding = 1;
+        fwrite(&padding, sizeof(padding), 1, file);
+    }
+}
+
+void output_ieee_float(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+    riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * sizeof(((double*)sampled_data)[0]));
+
+    fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
+    fwrite(fmt_chunk,  sizeof(fmt_chunk_t),  1, file);
+    fwrite(fact_chunk, sizeof(fact_chunk_t), 1, file);
+    fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
+    fwrite(sampled_data, wave_prop->total_number_of_samples * sizeof(((double*)sampled_data)[0]), 1, file);
+
+    /* Padding added based on if the chunk size is odd or even */
+    if (data_chunk->chunk_size % 2 != 0) {
+        o_byte padding = 1;
+        fwrite(&padding, sizeof(padding), 1, file);
+    }
+}
+
 void output_file_details(wave_prop_t* wave_prop) {
-    printf("\n"
-            "\n\tFile Name:\t%s"
+    printf("\n\tFile Name:\t%s"
             "\n\tSize:\t\t%lld"
             "\n\tDuration:\t%f"
             "\n\tSampling Freq.:\t%ld"

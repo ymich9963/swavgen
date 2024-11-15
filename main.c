@@ -23,7 +23,7 @@ int main (int argc, char** argv) {
     }
     
     /* Set the encoding and wave type based on inputs */
-    set_encoding_type(&wave_prop);
+    set_type_encoding(&wave_prop);
 
     /* Prepare the chunks based on the encoding */
     wave_prop.encd(&wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
@@ -32,20 +32,8 @@ int main (int argc, char** argv) {
     void* sampled_data = NULL;
     wave_prop.wave(&sampled_data, &wave_prop);
 
-    /* Once everything has been set, decide on the main chunk size */
-    riff_chunk.chunk_size = sizeof(riff_chunk.waveID) + sizeof(fmt_chunk) + sizeof(data_chunk) + (wave_prop.total_number_of_samples * sizeof(sampled_data));
-
-    fwrite(&riff_chunk, sizeof(riff_chunk_t), 1, file);
-    fwrite(&fmt_chunk,  sizeof(fmt_chunk_t),  1, file);
-    fwrite(&fact_chunk, sizeof(fact_chunk_t), 1, file);
-    fwrite(&data_chunk, sizeof(data_chunk_t), 1, file);
-    fwrite(sampled_data, wave_prop.total_number_of_samples * sizeof(sampled_data), 1, file);
-
-    /* Padding added based on if the chunk size is odd or even */
-    if (data_chunk.chunk_size % 2 != 0) {
-        o_byte padding = 1;
-        fwrite(&padding, sizeof(padding), 1, file);
-    }
+    /* Output the chunks */
+    wave_prop.outp(file, sampled_data, &wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
 
     /* Final file size */
     wave_prop.size = riff_chunk.chunk_size + sizeof(riff_chunk.chunkID);
