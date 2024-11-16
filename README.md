@@ -1,2 +1,2 @@
-# swavgen: Simple WAV File Generator
+# swavgen: Simple wave.WAV File Generator
 A simple tool to generate WAVE (.wav) files containing different wave types and encodings with no external dependencies! A great resource to understand very simple DSP and audio software development. It really helped me understand C data types and how to adhere to coding for a standard format. I couldn't find something similar online so I thought it would be a nice simple project to do.

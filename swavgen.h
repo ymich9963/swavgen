@@ -18,6 +18,7 @@
 #define FVAL_MIN 0.1f
 #define PCM_MAX 32767
 #define PCM_MIN -32768
+#define A       87.6
 
 /* Check macros */
 /* Check response from sscanf */
@@ -115,11 +116,12 @@ typedef struct Wave_Properties {
 
 void set_defaults(wave_prop_t* wave_prop);
 int get_options(int* argc, char** argv, wave_prop_t* wave_prop);
+int get_wave_type(char* str, wave_prop_t* wave_prop);
+int get_encoding(char* str, wave_prop_t* wave_prop);
 void set_type_encoding(wave_prop_t* wave_prop);
 void set_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
-void create_sine_16bit_PCM(void** samples, wave_prop_t* wave_prop);
+void create_sine_signed_16bit_PCM(void** samples, wave_prop_t* wave_prop);
 void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
-int get_wave_type(char* str, wave_prop_t* wave_prop);
 void create_sine_64bit_float(void** samples, wave_prop_t* wave_prop);
 void create_clipped_sine_64bit_float(void* samples, wave_prop_t* wave_prop);
 void output_ieee_float(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
