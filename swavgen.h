@@ -69,8 +69,8 @@ typedef struct Fact_Chunk {
     f_bytes dwSampleLength;
 }fact_chunk_t;
 
-/* Basic format chunk */
-typedef struct Format_chunk {
+/* Full format chunk */
+typedef struct Format_Chunk {
     char chunkID[4]; // "fmt "
     f_bytes chunk_size;
     t_bytes wFormatTag;
@@ -79,12 +79,10 @@ typedef struct Format_chunk {
     f_bytes nAvgBytesPerSec;
     t_bytes nBlockAlign;
     t_bytes wBitsPerSample;
-
-    /* Extensible use only */
-    /* cbSize; */
-    /* wValidBitsPerSample;  */
-    /* dwChannelMask; */
-    /* SubFormat; */
+    t_bytes cbSize;
+    t_bytes wValidBitsPerSample;
+    f_bytes dwChannelMask;
+    o_byte SubFormat[16];
 }fmt_chunk_t;
 
 /* Main RIFF chunk */
@@ -124,7 +122,7 @@ void create_sine_signed_16bit_PCM(void** samples, wave_prop_t* wave_prop);
 void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 void create_sine_64bit_float(void** samples, wave_prop_t* wave_prop);
 void create_clipped_sine_64bit_float(void* samples, wave_prop_t* wave_prop);
-void output_ieee_float(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
 void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
+void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
 void output_file_details(wave_prop_t* wave_prop);
 

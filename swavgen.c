@@ -1,6 +1,4 @@
 #include "swavgen.h"
-#include <cstdlib>
-#include <math.h>
 
 void set_defaults(wave_prop_t* wave_prop) {
     strcpy(wave_prop->file_name, "wav.wav");
@@ -84,7 +82,7 @@ void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_
 
     /* Format Chunk */
     strcpy(fmt_chunk->chunkID, "fmt ");
-    fmt_chunk->chunk_size = 16; // TODO: 18 in the spec? add cbSize as a separate struct?
+    fmt_chunk->chunk_size = 16; 
     fmt_chunk->wFormatTag = WAVE_FORMAT_PCM;
     fmt_chunk->nChannels = wave_prop->channels;
     fmt_chunk->nSamplesPerSec = wave_prop->f_s;
@@ -98,7 +96,7 @@ void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_
 }
 
 short calc_signed_16bit_PCM(double* x) {
-    if (x >= 0) {
+    if (*x >= 0) {
         return (PCM_MAX * *x);
     } else {
         return -(PCM_MIN * *x);
@@ -122,13 +120,14 @@ void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_
 
     /* Format Chunk */
     strcpy(fmt_chunk->chunkID, "fmt ");
-    fmt_chunk->chunk_size = 16;
-    fmt_chunk->wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
+    fmt_chunk->chunk_size = 18;
+    fmt_chunk->wFormatTag = WAVE_FORMAT_IEEE_FLOAT; // TODO: 18 in the spec? add cbSize as a separate struct?
     fmt_chunk->nChannels = wave_prop->channels;
     fmt_chunk->nSamplesPerSec = wave_prop->f_s;
     fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample, // 64 bit data
     fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
+    fmt_chunk->cbSize = 0;
 
     /* Fact Chunk */
     strcpy(fact_chunk->chunkID, "fact");
@@ -165,6 +164,7 @@ void set_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fm
     fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample, // 8 bit data
     fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
+    fmt_chunk->cbSize = 0;
 
     /* Fact Chunk */
     strcpy(fact_chunk->chunkID, "fact");
@@ -176,23 +176,37 @@ void set_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fm
     data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
 }
 
-char calc_a_law_compresssion(short* x) {
-    char sgn = x >= 0 ? 1 : -1;
-    if (abs(*x) < (1/A)) {
-        return sgn * ((A * abs(*x)) / (1 + log(A)));
-    } else if ((abs(*x) >= (1/A)) && (abs(*x) <= 1)) {
-        return sgn * ((1 + log(A * abs(*x)))/(1 + log(A)));
+double calc_a_law_compresssion(double* x) {
+    char sgn = (x >= 0) ? 1 : -1;
+    if (fabs(*x) < (1/A)) {
+        return sgn * ((A * fabs(*x)) / (1 + log(A)));
+    } else if ((fabs(*x) >= (1/A)) && (fabs(*x) <= 1)) {
+        return sgn * ((1 + log(A * fabs(*x)))/(1 + log(A)));
     }
+    return 1;
+}
+
+short calc_a_law_expander(char* y) {
+    char sgn = (y >= 0) ? 1 : -1;
+    if (abs(*y) < (1/(1 + log(A)))) {
+        return sgn * ((abs(*y) * (1 + log(A))) / A);
+    } else if ((abs(*y) >= (1/(1 + log(A)))) && (abs(*y) < 1)) {
+        return sgn * (exp(-1 + abs(*y) * (1 + log(A))) / A);
+    }
+    return 1;
 }
 
 void create_sine_a_law(void** samples, wave_prop_t* wave_prop) {
-    *samples = (char*) malloc(wave_prop->total_number_of_samples * sizeof(char));
+    *samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short));
     double sample;
     short pcm_sample;
+    char pcm_after;
     for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
         sample = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
-        pcm_sample = calc_signed_16bit_PCM(&sample);
-        ((char*)*samples)[n] = calc_a_law_compresssion(&pcm_sample);
+        pcm_after = calc_a_law_compresssion(&sample);
+        /* ((short*)*samples)[n] = calc_a_law_expander(&pcm_after); */
+
+        printf("comp: %lf\n", calc_a_law_compresssion(&sample));
     }
 }
 int get_wave_type(char* str, wave_prop_t* wave_prop) {
@@ -227,6 +241,14 @@ int get_encoding(char* str, wave_prop_t* wave_prop) {
     if (!(strcmp("IEEE-float", str))) {
         wave_prop->encoding = 'f';
         return 0;
+    }
+    if (!(strcmp("A-law", str))) {
+        wave_prop->encoding = 'a';
+        return 0;
+    }
+    if (!(strcmp("Mu-law", str))) {
+        wave_prop->encoding = 'm';
+        return 0;
     } else {
         printf("Unknown encoding. Please enter either, 'PCM 'or 'IEEE-float'.");
         return 1;
@@ -249,10 +271,22 @@ void set_type_encoding(wave_prop_t* wave_prop) {
             break;
         case 'f':
             wave_prop->encd = &set_ieee_float;
-            wave_prop->outp = &output_ieee_float;
+            wave_prop->outp = &output_non_pcm;
             switch (wave_prop->type) {
                 case 's':
                     wave_prop->wave = &create_sine_64bit_float;
+                    break;
+                default:
+                    printf("Entered default wave type\n");
+                    break;
+            }
+            break;
+        case 'a':
+            wave_prop->encd = &set_a_law;
+            wave_prop->outp = &output_non_pcm;
+            switch (wave_prop->type) {
+                case 's':
+                    wave_prop->wave = &create_sine_a_law;
                     break;
                 default:
                     printf("Entered default wave type\n");
@@ -266,11 +300,13 @@ void set_type_encoding(wave_prop_t* wave_prop) {
 }
 
 void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
-
     riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * sizeof(((short*)sampled_data)[0]));
 
+    /* Calculating the unused format chunk members to fix the effect of padding */
+    size_t unused_fmt_chunk = sizeof(fmt_chunk->cbSize) + sizeof(fmt_chunk->wValidBitsPerSample) + sizeof(fmt_chunk->dwChannelMask) + sizeof(fmt_chunk->SubFormat); 
+
     fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
-    fwrite(fmt_chunk,  sizeof(fmt_chunk_t),  1, file);
+    fwrite(fmt_chunk,  sizeof(fmt_chunk_t) - unused_fmt_chunk,  1, file);
     fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
     fwrite(sampled_data, wave_prop->total_number_of_samples * sizeof(((short*)sampled_data)[0]), 1, file);
 
@@ -281,11 +317,14 @@ void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_ch
     }
 }
 
-void output_ieee_float(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
     riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * sizeof(((double*)sampled_data)[0]));
 
+    /* Calculating the unused format chunk members to fix the effect of padding */
+    size_t unused_fmt_chunk = sizeof(fmt_chunk->wValidBitsPerSample) + sizeof(fmt_chunk->dwChannelMask) + sizeof(fmt_chunk->SubFormat); 
+
     fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
-    fwrite(fmt_chunk,  sizeof(fmt_chunk_t),  1, file);
+    fwrite(fmt_chunk,  sizeof(fmt_chunk_t) - unused_fmt_chunk,  1, file);
     fwrite(fact_chunk, sizeof(fact_chunk_t), 1, file);
     fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
     fwrite(sampled_data, wave_prop->total_number_of_samples * sizeof(((double*)sampled_data)[0]), 1, file);
