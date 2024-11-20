@@ -186,27 +186,31 @@ double calc_a_law_compresssion(double* x) {
     return 1;
 }
 
-short calc_a_law_expander(char* y) {
+double calc_a_law_expander(double* y) {
     char sgn = (y >= 0) ? 1 : -1;
-    if (abs(*y) < (1/(1 + log(A)))) {
-        return sgn * ((abs(*y) * (1 + log(A))) / A);
-    } else if ((abs(*y) >= (1/(1 + log(A)))) && (abs(*y) < 1)) {
-        return sgn * (exp(-1 + abs(*y) * (1 + log(A))) / A);
+    if (fabs(*y) < (1/(1 + log(A)))) {
+        return sgn * ((fabs(*y) * (1 + log(A))) / A);
+    } else if ((fabs(*y) >= (1/(1 + log(A)))) && (fabs(*y) < 1)) {
+        return sgn * (exp(-1 + fabs(*y) * (1 + log(A))) / A);
     }
     return 1;
 }
 
 void create_sine_a_law(void** samples, wave_prop_t* wave_prop) {
-    *samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short));
+    /* *samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short)); */
+    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
     double sample;
     short pcm_sample;
-    char pcm_after;
+    double pcm_after_comp;
+    double pcm_after_expd;
     for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
         sample = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
-        pcm_after = calc_a_law_compresssion(&sample);
-        /* ((short*)*samples)[n] = calc_a_law_expander(&pcm_after); */
+        pcm_after_comp = calc_a_law_compresssion(&sample);
+        pcm_after_expd = calc_a_law_expander(&pcm_after_comp);
+        ((double*)*samples)[n] = pcm_after_expd;
 
-        printf("comp: %lf\n", calc_a_law_compresssion(&sample));
+        /* printf("comp: %lf\n", pcm_after_comp); */
+        /* printf("expd: %lf\n", pcm_after_expd); */
     }
 }
 int get_wave_type(char* str, wave_prop_t* wave_prop) {
