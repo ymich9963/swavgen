@@ -11,14 +11,16 @@
 #define WAVE_FORMAT_MULAW       0x0007  // 8-bit ITU-T G.711 µ-law
 #define WAVE_FORMAT_EXTENSIBLE  0xFFFE  // Determined by SubFormat
 
-#define MAX_FILE_NAME 100
-#define LVAL_MAX 999999999
-#define LVAL_MIN 0
-#define FVAL_MAX 300.0f
-#define FVAL_MIN 0.1f
-#define PCM_MAX 32767
-#define PCM_MIN -32768
-#define A       87.6
+#define MAX_FILE_NAME   100
+#define LVAL_MAX        999999999
+#define LVAL_MIN        0
+#define FVAL_MAX        300.0f
+#define FVAL_MIN        0.1f
+#define PCM_MAX         (short) 0x7fff  //  32767 or 0b0111111111111111
+#define PCM_MIN         (short) 0x8000  // -32768 or 0b1000000000000000
+#define LAW_MAX         (char)  0x80    // -256 or 0b10000000
+#define LAW_MIN         (char)  0x7f    //  255 or 0b01111111
+#define A               87.6
 
 /* Check macros */
 /* Check response from sscanf */

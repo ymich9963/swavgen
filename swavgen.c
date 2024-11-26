@@ -87,7 +87,7 @@ void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_
     fmt_chunk->nChannels = wave_prop->channels;
     fmt_chunk->nSamplesPerSec = wave_prop->f_s;
     fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample, // 16 bit data
-    fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
+        fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
 
     /* Data Chunk */
@@ -121,10 +121,10 @@ void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_
     /* Format Chunk */
     strcpy(fmt_chunk->chunkID, "fmt ");
     fmt_chunk->chunk_size = 18;
-    fmt_chunk->wFormatTag = WAVE_FORMAT_IEEE_FLOAT; // TODO: 18 in the spec? add cbSize as a separate struct?
+    fmt_chunk->wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
     fmt_chunk->nChannels = wave_prop->channels;
     fmt_chunk->nSamplesPerSec = wave_prop->f_s;
-    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample, // 64 bit data
+    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample; // 64 bit data
     fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
     fmt_chunk->cbSize = 0;
@@ -157,11 +157,11 @@ void set_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fm
 
     /* Format Chunk */
     strcpy(fmt_chunk->chunkID, "fmt ");
-    fmt_chunk->chunk_size = 16;
+    fmt_chunk->chunk_size = 18;
     fmt_chunk->wFormatTag = WAVE_FORMAT_ALAW;
     fmt_chunk->nChannels = wave_prop->channels;
     fmt_chunk->nSamplesPerSec = wave_prop->f_s;
-    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample, // 8 bit data
+    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample; // 8 bit data
     fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
     fmt_chunk->cbSize = 0;
@@ -176,43 +176,64 @@ void set_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fm
     data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
 }
 
-double calc_a_law_compresssion(double* x) {
-    char sgn = (x >= 0) ? 1 : -1;
+/* Based on the Wikipedia equation. Does not work! Left in to show attempts */
+char calc_a_law_compressing(double* x) {
+    double resd = 0.0f;
+    char resc = 0;
+    char sgn = (*x >= 0) ? 1 : -1;
     if (fabs(*x) < (1/A)) {
-        return sgn * ((A * fabs(*x)) / (1 + log(A)));
+        resd = sgn * ((A * fabs(*x)) / (1 + log(A)));
     } else if ((fabs(*x) >= (1/A)) && (fabs(*x) <= 1)) {
-        return sgn * ((1 + log(A * fabs(*x)))/(1 + log(A)));
+        resd = sgn * ((1 + log(A * fabs(*x))) / (1 + log(A)));
     }
-    return 1;
+    if (resd >= 0) {
+        resc =  (LAW_MAX * resd);
+    } else {
+        resc = -(LAW_MIN * resd);
+    }
+    resc = resc ^ (0x55);  /* toggle even bits? not in wikipedia equation */
+    return resc;
 }
 
-double calc_a_law_expander(double* y) {
-    char sgn = (y >= 0) ? 1 : -1;
-    if (fabs(*y) < (1/(1 + log(A)))) {
-        return sgn * ((fabs(*y) * (1 + log(A))) / A);
-    } else if ((fabs(*y) >= (1/(1 + log(A)))) && (fabs(*y) < 1)) {
-        return sgn * (exp(-1 + fabs(*y) * (1 + log(A))) / A);
+/* Read license in the ITU-T code and attribute accordingly. Mention that the code was changed (also change it more) and is based on that. */
+char alaw_compress (short* inbuf) {
+    short ix, iexp;
+    short ogbuf;
+
+    ix = *inbuf < 0          /* 0 <= ix < 2048 */
+        ? (~(*inbuf)) >> 4       /* 1's complement for negative values */
+        : (*inbuf) >> 4;
+
+    /* Do more, if exponent > 0 */
+    if (ix > 15) {              /* exponent=0 for ix <= 15 */
+        iexp = 1;                 /* first step: */
+        while (ix > 16 + 15) {    /* find mantissa and exponent */
+            ix >>= 1;
+            iexp++;
+        }
+        ix -= 16;                 /* second step: remove leading '1' */
+
+        ix += iexp << 4;          /* now compute encoded value */
     }
-    return 1;
+    if (*inbuf >= 0)
+        ix |= (0x0080);           /* add sign bit */
+
+    ogbuf = ix ^ (0x0055);  /* toggle even bits */
+
+    return ogbuf;
 }
 
 void create_sine_a_law(void** samples, wave_prop_t* wave_prop) {
-    /* *samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short)); */
-    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
+    *samples = (char*) malloc(wave_prop->total_number_of_samples * sizeof(char));
     double sample;
     short pcm_sample;
-    double pcm_after_comp;
-    double pcm_after_expd;
     for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
         sample = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
-        pcm_after_comp = calc_a_law_compresssion(&sample);
-        pcm_after_expd = calc_a_law_expander(&pcm_after_comp);
-        ((double*)*samples)[n] = pcm_after_expd;
-
-        /* printf("comp: %lf\n", pcm_after_comp); */
-        /* printf("expd: %lf\n", pcm_after_expd); */
+        pcm_sample = calc_signed_16bit_PCM(&sample);
+        ((char*)*samples)[n] = alaw_compress(&pcm_sample);
     }
 }
+
 int get_wave_type(char* str, wave_prop_t* wave_prop) {
 
     if (!(strcmp("sine", str))) {
@@ -322,16 +343,18 @@ void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_ch
 }
 
 void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
-    riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * sizeof(((double*)sampled_data)[0]));
-
     /* Calculating the unused format chunk members to fix the effect of padding */
     size_t unused_fmt_chunk = sizeof(fmt_chunk->wValidBitsPerSample) + sizeof(fmt_chunk->dwChannelMask) + sizeof(fmt_chunk->SubFormat); 
 
+    size_t used_fmt_chunk = sizeof(*fmt_chunk) - unused_fmt_chunk;
+
+    riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + used_fmt_chunk + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * sizeof(*sampled_data));
+
     fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
-    fwrite(fmt_chunk,  sizeof(fmt_chunk_t) - unused_fmt_chunk,  1, file);
+    fwrite(fmt_chunk,  used_fmt_chunk,  1, file);
     fwrite(fact_chunk, sizeof(fact_chunk_t), 1, file);
     fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
-    fwrite(sampled_data, wave_prop->total_number_of_samples * sizeof(((double*)sampled_data)[0]), 1, file);
+    fwrite(sampled_data, wave_prop->total_number_of_samples * sizeof(*sampled_data), 1, file);
 
     /* Padding added based on if the chunk size is odd or even */
     if (data_chunk->chunk_size % 2 != 0) {
