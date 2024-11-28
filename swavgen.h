@@ -18,9 +18,10 @@
 #define FVAL_MIN        0.1f
 #define PCM_MAX         (short) 0x7fff  //  32767 or 0b0111111111111111
 #define PCM_MIN         (short) 0x8000  // -32768 or 0b1000000000000000
-#define LAW_MAX         (char)  0x80    // -256 or 0b10000000
-#define LAW_MIN         (char)  0x7f    //  255 or 0b01111111
+#define LAW_MAX         (char)  0x7f    //  255 or 0b01111111
+#define LAW_MIN         (char)  0x80    // -256 or 0b10000000
 #define A               87.6
+#define MU              255
 
 /* Check macros */
 /* Check response from sscanf */
@@ -124,8 +125,8 @@ void create_sine_signed_16bit_PCM(void** samples, wave_prop_t* wave_prop);
 void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 void create_sine_64bit_float(void** samples, wave_prop_t* wave_prop);
 void set_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
-char calc_a_law_compressing_old(double* x);
-char alaw_compress (short* x);
+char calc_a_law_compress_old(double* x);
+char a_law_compress (short* x);
 void create_sine_a_law(void** samples, wave_prop_t* wave_prop);
 void create_clipped_sine_64bit_float(void* samples, wave_prop_t* wave_prop);
 void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);

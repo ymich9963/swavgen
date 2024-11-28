@@ -177,7 +177,7 @@ void set_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fm
 }
 
 /* Based on the Wikipedia equation. Does not work! Left in to show attempt. Issue with x = 0. */
-char calc_a_law_compressing_old(double* x) {
+char calc_a_law_compress_old(double* x) {
     double resd = 0.0f;
     char resc = 0;
     char sgn = (*x >= 0) ? 1 : -1;
@@ -191,12 +191,12 @@ char calc_a_law_compressing_old(double* x) {
     } else {
         resc = -(LAW_MIN * resd);
     }
-    resc = resc ^ (0x55);  /* toggle even bits? not in wikipedia equation */
+    /* resc = resc ^ (0x55);  #<{(| toggle even bits? not in wikipedia equation |)}># */
     return resc;
 }
 
 /* Read license in the ITU-T code and attribute accordingly. Mention that the code was changed (also change it more) and is based on that. */
-char alaw_compress (short* x) {
+char a_law_compress(short* x) {
     short ix, exp;
     short out;
 
@@ -230,10 +230,107 @@ void create_sine_a_law(void** samples, wave_prop_t* wave_prop) {
     for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
         sample = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
         pcm_sample = calc_signed_16bit_PCM(&sample);
-        ((char*)*samples)[n] = alaw_compress(&pcm_sample);
+        ((char*)*samples)[n] = a_law_compress(&pcm_sample);
     }
 }
 
+void set_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
+
+    /* Default to 1 byte of data */
+    wave_prop->bytes_per_sample = 1;
+
+    /* RIFF Chunk */
+    strcpy(riff_chunk->chunkID, "RIFF");
+    strcpy(riff_chunk->waveID, "WAVE");
+
+    /* Format Chunk */
+    strcpy(fmt_chunk->chunkID, "fmt ");
+    fmt_chunk->chunk_size = 18;
+    fmt_chunk->wFormatTag = WAVE_FORMAT_MULAW;
+    fmt_chunk->nChannels = wave_prop->channels;
+    fmt_chunk->nSamplesPerSec = wave_prop->f_s;
+    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample; // 8 bit data
+    fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
+    fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
+    fmt_chunk->cbSize = 0;
+
+    /* Fact Chunk */
+    strcpy(fact_chunk->chunkID, "fact");
+    fact_chunk->chunk_size = 4;
+    fact_chunk->dwSampleLength = wave_prop->channels * wave_prop->total_number_of_samples;
+
+    /* Data Chunk */
+    strcpy(data_chunk->chunkID, "data");
+    data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
+}
+
+/* Based on the Wikipedia equation. Does not work! Sometimes values agree. */
+char calc_mu_law_compress_old(double* x) {
+    double resd = 0.0f;
+    char resc = 0;
+    char sgn = (*x >= 0) ? 1 : -1;
+
+    resd = sgn * (log(1 + MU * fabs(*x)))/(log(1 + MU));
+
+    if (resd >= 0) {
+        resc =  (LAW_MAX * resd);
+    } else {
+        resc = -(LAW_MIN * resd);
+    }
+    return resc;
+}
+
+/* Read license in the ITU-T code and attribute accordingly. Mention that the code was changed (also change it more) and is based on that. */
+char mu_law_compress(short *x) {
+    short segment;                  /* segment (Table 2/G711, column 1) */
+    short out;
+    short low_nibble, high_nibble;  /* low/high nibble of log companded sample */
+
+    /* Change from 14 bit left justified to 14 bit right justified. 
+     * Compute absolute value; adjust for easy processing */
+
+    /* Compute 1's complement */
+    short absval = *x < 0 ? ((~(*x)) >> 2) + 33 : ((*x) >> 2) + 33; /* Absolute value */     
+    /* 33 is the difference value between the thresholds for A-law and u-law. */
+
+    if (absval > (0x1FFF))       /* limit to < 8192 */
+        absval = (0x1FFF);
+
+    /* Determination of sample's segment */
+    short temp = absval >> 6;
+    segment = 1;
+    while (temp != 0) {
+        segment++;
+        temp >>= 1;
+    }
+
+    /* Mounting the high-nibble of the log-PCM sample */
+    high_nibble = (0x0008) - segment;
+
+    /* Mounting the low-nibble of the log PCM sample. Right shift of mantissa and masking away the leading '1' */
+    low_nibble = (absval >> segment) & (0x000F);
+    low_nibble = (0x000F) - low_nibble;
+
+    /* Joining the high-nibble and the low-nibble of the log PCM sample */
+    out = (high_nibble << 4) | low_nibble;
+
+    /* Add sign bit */
+    if (*x >= 0)
+        out = out | (0x0080);
+
+    return out;
+}
+
+void create_sine_mu_law(void** samples, wave_prop_t* wave_prop) {
+    *samples = (char*) malloc(wave_prop->total_number_of_samples * sizeof(char));
+    double sample;
+    short pcm_sample;
+    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        sample = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+        pcm_sample = calc_signed_16bit_PCM(&sample);
+        ((char*)*samples)[n] = mu_law_compress(&pcm_sample);
+    }
+}
 int get_wave_type(char* str, wave_prop_t* wave_prop) {
 
     if (!(strcmp("sine", str))) {
@@ -318,6 +415,18 @@ void set_type_encoding(wave_prop_t* wave_prop) {
                     break;
             }
             break;
+        case 'm':
+            wave_prop->encd = &set_mu_law;
+            wave_prop->outp = &output_non_pcm;
+            switch (wave_prop->type) {
+                case 's':
+                    wave_prop->wave = &create_sine_mu_law;
+                    break;
+                default:
+                    printf("Entered default wave type\n");
+                    break;
+            }
+            break;
         default:
             printf("Entered default encoding.\n");
             break;
@@ -325,6 +434,7 @@ void set_type_encoding(wave_prop_t* wave_prop) {
 }
 
 void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+
     riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * sizeof(((short*)sampled_data)[0]));
 
     /* Calculating the unused format chunk members to fix the effect of padding */
