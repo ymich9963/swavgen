@@ -176,8 +176,8 @@ void set_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fm
     data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
 }
 
-/* Based on the Wikipedia equation. Does not work! Left in to show attempts */
-char calc_a_law_compressing(double* x) {
+/* Based on the Wikipedia equation. Does not work! Left in to show attempt. Issue with x = 0. */
+char calc_a_law_compressing_old(double* x) {
     double resd = 0.0f;
     char resc = 0;
     char sgn = (*x >= 0) ? 1 : -1;
@@ -196,31 +196,31 @@ char calc_a_law_compressing(double* x) {
 }
 
 /* Read license in the ITU-T code and attribute accordingly. Mention that the code was changed (also change it more) and is based on that. */
-char alaw_compress (short* inbuf) {
-    short ix, iexp;
-    short ogbuf;
+char alaw_compress (short* x) {
+    short ix, exp;
+    short out;
 
-    ix = *inbuf < 0          /* 0 <= ix < 2048 */
-        ? (~(*inbuf)) >> 4       /* 1's complement for negative values */
-        : (*inbuf) >> 4;
+    ix = *x < 0          /* 0 <= ix < 2048 */
+        ? (~(*x)) >> 4       /* 1's complement for negative values */
+        : (*x) >> 4;
 
     /* Do more, if exponent > 0 */
     if (ix > 15) {              /* exponent=0 for ix <= 15 */
-        iexp = 1;                 /* first step: */
+        exp = 1;                 /* first step: */
         while (ix > 16 + 15) {    /* find mantissa and exponent */
             ix >>= 1;
-            iexp++;
+            exp++;
         }
         ix -= 16;                 /* second step: remove leading '1' */
 
-        ix += iexp << 4;          /* now compute encoded value */
+        ix += exp << 4;          /* now compute encoded value */
     }
-    if (*inbuf >= 0)
+    if (*x >= 0)
         ix |= (0x0080);           /* add sign bit */
 
-    ogbuf = ix ^ (0x0055);  /* toggle even bits */
+    out = ix ^ (0x0055);  /* toggle even bits */
 
-    return ogbuf;
+    return out;
 }
 
 void create_sine_a_law(void** samples, wave_prop_t* wave_prop) {

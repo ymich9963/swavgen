@@ -123,6 +123,10 @@ void set_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_
 void create_sine_signed_16bit_PCM(void** samples, wave_prop_t* wave_prop);
 void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 void create_sine_64bit_float(void** samples, wave_prop_t* wave_prop);
+void set_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
+char calc_a_law_compressing_old(double* x);
+char alaw_compress (short* x);
+void create_sine_a_law(void** samples, wave_prop_t* wave_prop);
 void create_clipped_sine_64bit_float(void* samples, wave_prop_t* wave_prop);
 void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
 void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
