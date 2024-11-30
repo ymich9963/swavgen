@@ -110,8 +110,9 @@ typedef struct Wave_Properties {
     char type;
     char encoding;
     void (*defv)(wave_prop_t*); // Set default values 
-    void (*encd)(wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Encoding 
-    void (*wave)(void**, wave_prop_t*); // Wave generation function 
+    void (*seth)(wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Set header values 
+    void (*wave)(double**, wave_prop_t*); // Wave generation function 
+    void (*encd)(double*, void**, wave_prop_t*); // Encoding function
     void (*outp)(FILE*, void*, wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Output function
 }wave_prop_t;
 
@@ -119,16 +120,21 @@ void set_defaults(wave_prop_t* wave_prop);
 int get_options(int* argc, char** argv, wave_prop_t* wave_prop);
 int get_wave_type(char* str, wave_prop_t* wave_prop);
 int get_encoding(char* str, wave_prop_t* wave_prop);
-void set_type_encoding(wave_prop_t* wave_prop);
+int set_type_encoding(wave_prop_t* wave_prop);
+void create_sine(double** samples, wave_prop_t* wave_prop);
+short convert_double_to_pcm(double* sample);
 void set_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
-void create_sine_signed_16bit_PCM(void** samples, wave_prop_t* wave_prop);
+void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
-void create_sine_64bit_float(void** samples, wave_prop_t* wave_prop);
+void encode_float_64bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
-char calc_a_law_compress_old(double* x);
+char a_law_compress_old(double* x);
 char a_law_compress (short* x);
-void create_sine_a_law(void** samples, wave_prop_t* wave_prop);
-void create_clipped_sine_64bit_float(void* samples, wave_prop_t* wave_prop);
+void encode_a_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+void set_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
+char mu_law_compress_old(double* x);
+char mu_law_compress (short* x);
+void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
 void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
 void output_file_details(wave_prop_t* wave_prop);

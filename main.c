@@ -1,7 +1,8 @@
 #include "swavgen.h"
 
-// TODO: Use other types of encoding, A law, mu law, PCM (8/24/32 signed/unsigned)
+// TODO: Use other types of encoding PCM (8/24/32 signed/unsigned)
 // TODO: Make other waves, square, triangle, saw, clipped.
+// TODO: Make use of the extensible format
 
 int main (int argc, char** argv) {
 
@@ -22,17 +23,21 @@ int main (int argc, char** argv) {
     }
     
     /* Set the encoding and wave type based on inputs */
-    set_type_encoding(&wave_prop);
+    CHECK_ERR(set_type_encoding(&wave_prop));
 
     /* Prepare the chunks based on the encoding */
-    wave_prop.encd(&wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
+    wave_prop.seth(&wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
 
     /* Create the wave */
-    void* sampled_data = NULL;
-    wave_prop.wave(&sampled_data, &wave_prop);
+    double* samples = NULL;
+    wave_prop.wave(&samples, &wave_prop);
+
+    /* Encode the samples */
+    void* encoded_samples = NULL;
+    wave_prop.encd(samples, &encoded_samples, &wave_prop);
 
     /* Output the chunks */
-    wave_prop.outp(file, sampled_data, &wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
+    wave_prop.outp(file, encoded_samples, &wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
 
     /* Final file size */
     wave_prop.size = riff_chunk.chunk_size + sizeof(riff_chunk.chunkID);

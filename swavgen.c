@@ -1,4 +1,5 @@
 #include "swavgen.h"
+#include <stdio.h>
 
 void set_defaults(wave_prop_t* wave_prop) {
     strcpy(wave_prop->file_name, "wav.wav");
@@ -22,12 +23,12 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
     for (int i = 1; i < *argc; i++) {
         if (argv[i][0] != '-' && argv[i - 1][0] != '-') {
             CHECK_RES(sscanf(argv[i], "%s", strval));
-            get_wave_type(strval, wave_prop);
+            CHECK_ERR(get_wave_type(strval, wave_prop));
             continue;
         }
         if (!(strcmp("-e", argv[i])) || !(strcmp("--encoding", argv[i]))) {
             CHECK_RES(sscanf(argv[i + 1], "%s", strval));
-            get_encoding(strval, wave_prop);
+            CHECK_ERR(get_encoding(strval, wave_prop));
             continue;
         }
         if (!(strcmp("-f", argv[i])) || !(strcmp("--frequency", argv[i]))) {
@@ -70,6 +71,106 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
     }
     return 0;
 }
+
+int get_wave_type(char* str, wave_prop_t* wave_prop) {
+
+    if (!(strcmp("sine", str))) {
+        wave_prop->type = 's';
+        return 0;
+    }
+    if (!(strcmp("square", str))) {
+        wave_prop->type = 'q';
+        return 0;
+    }
+    if (!(strcmp("triangle", str))) {
+        wave_prop->type = 't';
+        return 0;
+    }
+    if (!(strcmp("saw", str))) {
+        wave_prop->type = 'w';
+        return 0;
+    } else {
+        printf("\nUnknown wave type. Please enter either, 'sine', 'square', 'triangle', or 'saw'.\n");
+        return 1;
+    }
+}
+
+int get_encoding(char* str, wave_prop_t* wave_prop) {
+
+    if (!(strcmp("PCM", str))) {
+        wave_prop->encoding = 'p';
+        return 0;
+    }
+    if (!(strcmp("IEEE-float", str))) {
+        wave_prop->encoding = 'f';
+        return 0;
+    }
+    if (!(strcmp("A-law", str))) {
+        wave_prop->encoding = 'a';
+        return 0;
+    }
+    if (!(strcmp("Mu-law", str))) {
+        wave_prop->encoding = 'm';
+        return 0;
+    } else {
+        printf("Unknown encoding. Please enter either, 'PCM 'or 'IEEE-float'.");
+        return 1;
+    }
+}
+
+int set_type_encoding(wave_prop_t* wave_prop) {
+    switch (wave_prop->type) {
+        case 's':
+            wave_prop->wave = &create_sine;
+            break;
+        default:
+            printf("How did we get here?\n");
+            return 1;
+    }
+
+    switch (wave_prop->encoding) {
+        case 'p':
+            wave_prop->seth = &set_pcm;
+            wave_prop->outp = &output_pcm;
+            wave_prop->encd = &encode_pcm_signed_16bit;
+            break;
+        case 'f':
+            wave_prop->seth = &set_ieee_float;
+            wave_prop->outp = &output_non_pcm;
+            wave_prop->encd = &encode_float_64bit;
+            break;
+        case 'a':
+            wave_prop->seth = &set_a_law;
+            wave_prop->outp = &output_non_pcm;
+            wave_prop->encd = &encode_a_law;
+            break;
+        case 'm':
+            wave_prop->seth = &set_mu_law;
+            wave_prop->outp = &output_non_pcm;
+            wave_prop->encd = &encode_mu_law;
+            break;
+        default:
+            printf("How did we get here?\n");
+            return 1;
+    } 
+    return 0;
+}
+
+void create_sine(double** samples, wave_prop_t* wave_prop) {
+    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
+    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        ((double*)*samples)[n] = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+    }
+}
+
+short convert_double_to_pcm(double* sample) {
+    if (*sample >= 0) {
+        return (PCM_MAX * *sample);
+    } else {
+        return -(PCM_MIN * *sample);
+    }
+}
+
 void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
 
     /* Default to 2 bytes of data */
@@ -86,8 +187,8 @@ void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_
     fmt_chunk->wFormatTag = WAVE_FORMAT_PCM;
     fmt_chunk->nChannels = wave_prop->channels;
     fmt_chunk->nSamplesPerSec = wave_prop->f_s;
-    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample, // 16 bit data
-        fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
+    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample; // 16 bit data
+    fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
 
     /* Data Chunk */
@@ -95,20 +196,10 @@ void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_
     data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
 }
 
-short calc_signed_16bit_PCM(double* x) {
-    if (*x >= 0) {
-        return (PCM_MAX * *x);
-    } else {
-        return -(PCM_MIN * *x);
-    }
-}
-
-void create_sine_signed_16bit_PCM(void** samples, wave_prop_t* wave_prop) {
-    *samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short));
-    double sample;
-    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        sample = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
-        ((short*)*samples)[n] = calc_signed_16bit_PCM(&sample);
+void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
+    *encoded_samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short));
+    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        ((short*)*encoded_samples)[n] = convert_double_to_pcm(&samples[n]);
     }
 }
 
@@ -139,10 +230,10 @@ void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_
     data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
 }
 
-void create_sine_64bit_float(void** samples, wave_prop_t* wave_prop) {
-    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
-    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        ((double*)*samples)[n] = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+void encode_float_64bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
+    *encoded_samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(short));
+    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        ((double*)*encoded_samples)[n] = samples[n];
     }
 }
 
@@ -177,7 +268,7 @@ void set_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fm
 }
 
 /* Based on the Wikipedia equation. Does not work! Left in to show attempt. Issue with x = 0. */
-char calc_a_law_compress_old(double* x) {
+char a_law_compress_old(double* x) {
     double resd = 0.0f;
     char resc = 0;
     char sgn = (*x >= 0) ? 1 : -1;
@@ -223,14 +314,12 @@ char a_law_compress(short* x) {
     return out;
 }
 
-void create_sine_a_law(void** samples, wave_prop_t* wave_prop) {
-    *samples = (char*) malloc(wave_prop->total_number_of_samples * sizeof(char));
-    double sample;
+void encode_a_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     short pcm_sample;
-    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        sample = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
-        pcm_sample = calc_signed_16bit_PCM(&sample);
-        ((char*)*samples)[n] = a_law_compress(&pcm_sample);
+    *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * sizeof(char));
+    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        pcm_sample = convert_double_to_pcm(&samples[n]);
+        ((char*)*encoded_samples)[n] = a_law_compress(&pcm_sample);
     }
 }
 
@@ -265,7 +354,7 @@ void set_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *f
 }
 
 /* Based on the Wikipedia equation. Does not work! Sometimes values agree. */
-char calc_mu_law_compress_old(double* x) {
+char mu_law_compress_old(double* x) {
     double resd = 0.0f;
     char resc = 0;
     char sgn = (*x >= 0) ? 1 : -1;
@@ -321,116 +410,13 @@ char mu_law_compress(short *x) {
     return out;
 }
 
-void create_sine_mu_law(void** samples, wave_prop_t* wave_prop) {
-    *samples = (char*) malloc(wave_prop->total_number_of_samples * sizeof(char));
-    double sample;
+void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     short pcm_sample;
-    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        sample = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
-        pcm_sample = calc_signed_16bit_PCM(&sample);
-        ((char*)*samples)[n] = mu_law_compress(&pcm_sample);
+    *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * sizeof(char));
+    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        pcm_sample = convert_double_to_pcm(&samples[n]);
+        ((char*)*encoded_samples)[n] = mu_law_compress(&pcm_sample);
     }
-}
-int get_wave_type(char* str, wave_prop_t* wave_prop) {
-
-    if (!(strcmp("sine", str))) {
-        wave_prop->type = 's';
-        return 0;
-    }
-    if (!(strcmp("square", str))) {
-        wave_prop->type = 'q';
-        return 0;
-    }
-    if (!(strcmp("triangle", str))) {
-        wave_prop->type = 't';
-        return 0;
-    }
-    if (!(strcmp("saw", str))) {
-        wave_prop->type = 'w';
-        return 0;
-    } else {
-        printf("Unknown wave type. Please enter either, 'sine', 'square', 'triangle', or 'saw'.");
-        return 1;
-    }
-}
-
-int get_encoding(char* str, wave_prop_t* wave_prop) {
-
-    if (!(strcmp("PCM", str))) {
-        wave_prop->encoding = 'p';
-        return 0;
-    }
-    if (!(strcmp("IEEE-float", str))) {
-        wave_prop->encoding = 'f';
-        return 0;
-    }
-    if (!(strcmp("A-law", str))) {
-        wave_prop->encoding = 'a';
-        return 0;
-    }
-    if (!(strcmp("Mu-law", str))) {
-        wave_prop->encoding = 'm';
-        return 0;
-    } else {
-        printf("Unknown encoding. Please enter either, 'PCM 'or 'IEEE-float'.");
-        return 1;
-    }
-}
-
-void set_type_encoding(wave_prop_t* wave_prop) {
-    switch (wave_prop->encoding) {
-        case 'p':
-            wave_prop->encd = &set_pcm;
-            wave_prop->outp = &output_pcm;
-            switch (wave_prop->type) {
-                case 's':
-                    wave_prop->wave = &create_sine_signed_16bit_PCM;
-                    break;
-                default:
-                    printf("Entered default wave type\n");
-                    break;
-            }
-            break;
-        case 'f':
-            wave_prop->encd = &set_ieee_float;
-            wave_prop->outp = &output_non_pcm;
-            switch (wave_prop->type) {
-                case 's':
-                    wave_prop->wave = &create_sine_64bit_float;
-                    break;
-                default:
-                    printf("Entered default wave type\n");
-                    break;
-            }
-            break;
-        case 'a':
-            wave_prop->encd = &set_a_law;
-            wave_prop->outp = &output_non_pcm;
-            switch (wave_prop->type) {
-                case 's':
-                    wave_prop->wave = &create_sine_a_law;
-                    break;
-                default:
-                    printf("Entered default wave type\n");
-                    break;
-            }
-            break;
-        case 'm':
-            wave_prop->encd = &set_mu_law;
-            wave_prop->outp = &output_non_pcm;
-            switch (wave_prop->type) {
-                case 's':
-                    wave_prop->wave = &create_sine_mu_law;
-                    break;
-                default:
-                    printf("Entered default wave type\n");
-                    break;
-            }
-            break;
-        default:
-            printf("Entered default encoding.\n");
-            break;
-    } 
 }
 
 void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
