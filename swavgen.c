@@ -1,5 +1,4 @@
 #include "swavgen.h"
-#include <stdio.h>
 
 void set_defaults(wave_prop_t* wave_prop) {
     strcpy(wave_prop->file_name, "wav.wav");
@@ -7,6 +6,7 @@ void set_defaults(wave_prop_t* wave_prop) {
     wave_prop->duration = 2.0; // seconds
     wave_prop->f_s = 48000; // sample rate
     wave_prop->f = 800; // sine wave frequency
+    wave_prop->p = 1.0f/wave_prop->f; // sine wave period 
     wave_prop->total_number_of_samples = wave_prop->f_s * wave_prop->duration;
     wave_prop->channels = 1;
     wave_prop->bytes_per_sample = 8; // used in IEEE float format
@@ -35,6 +35,14 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
             CHECK_RES(sscanf(argv[i + 1], "%ld", &lval));
             CHECK_LIMITS_LONG(lval);
             wave_prop->f = lval;
+            wave_prop->p = 1.0f/lval;
+            continue;
+        }
+        if (!(strcmp("-p", argv[i])) || !(strcmp("--period", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%f", &fval));
+            CHECK_LIMITS_FLOAT(fval);
+            wave_prop->p = fval;
+            wave_prop->f = 1/fval;
             continue;
         }
         if (!(strcmp("-s", argv[i])) || !(strcmp("--sampling-frequency", argv[i]))) {
@@ -123,6 +131,15 @@ int set_type_encoding(wave_prop_t* wave_prop) {
         case 's':
             wave_prop->wave = &create_sine;
             break;
+        case 'q':
+            wave_prop->wave = &create_square;
+            break;
+        case 't':
+            wave_prop->wave = &create_triangle;
+            break;
+        case 'w':
+            wave_prop->wave = &create_saw;
+            break;
         default:
             printf("How did we get here?\n");
             return 1;
@@ -159,7 +176,34 @@ int set_type_encoding(wave_prop_t* wave_prop) {
 void create_sine(double** samples, wave_prop_t* wave_prop) {
     *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
     for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        ((double*)*samples)[n] = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+        ((double*)*samples)[n] = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+    }
+}
+
+void create_square(double** samples, wave_prop_t* wave_prop) {
+    double sample;
+    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
+    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        sample = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+        ((double*)*samples)[n] = wave_prop->a * (double) sgn(&sample);
+    }
+}
+
+void create_triangle(double** samples, wave_prop_t* wave_prop) {
+    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
+    /* Two implementations. Not sure which one is best. */
+    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        ((double*)*samples)[n] = (2 * wave_prop->a / M_PI) * asin(sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s));
+        /* ((double*)*samples)[n] = wave_prop->a * (4 * fabs(((double)wave_prop->f * n / wave_prop->f_s) - (int)(((double)wave_prop->f * n / wave_prop->f_s) + 0.5f )) - 1); */
+    }
+}
+
+void create_saw(double** samples, wave_prop_t* wave_prop) {
+    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
+    /* Two implementations. Not sure which one is best. */
+    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        /* ((double*)*samples)[n] = wave_prop->a * (((double)wave_prop->f * n / wave_prop->f_s) - (int)((double)wave_prop->f * n / wave_prop->f_s)); */
+        ((double*)*samples)[n] = wave_prop->a * (2 * (((double)wave_prop->f * n / wave_prop->f_s) - (int)(0.5f + ((double)wave_prop->f * n / wave_prop->f_s))));
     }
 }
 
@@ -169,6 +213,11 @@ short convert_double_to_pcm(double* sample) {
     } else {
         return -(PCM_MIN * *sample);
     }
+}
+
+char sgn(double* x) {
+    char sgn = (*x >= 0) ? 1 : -1;
+    return sgn;
 }
 
 void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
@@ -465,8 +514,9 @@ void output_file_details(wave_prop_t* wave_prop) {
             "\n\tDuration:\t%f"
             "\n\tSampling Freq.:\t%ld"
             "\n\tTone Freq.:\t%ld"
+            "\n\tPeriod:\t\t%f"
             "\n\tTotal Samples:\t%lld"
             "\n\n"
-            , wave_prop->file_name, wave_prop->size, wave_prop->duration, wave_prop->f_s, wave_prop->f, wave_prop->total_number_of_samples);
+            , wave_prop->file_name, wave_prop->size, wave_prop->duration, wave_prop->f_s, wave_prop->f, wave_prop->p, wave_prop->total_number_of_samples);
 }
 

@@ -15,7 +15,7 @@
 #define LVAL_MAX        999999999
 #define LVAL_MIN        0
 #define FVAL_MAX        300.0f
-#define FVAL_MIN        0.1f
+#define FVAL_MIN        0.00001f
 #define PCM_MAX         (short) 0x7fff  //  32767 or 0b0111111111111111
 #define PCM_MIN         (short) 0x8000  // -32768 or 0b1000000000000000
 #define LAW_MAX         (char)  0x7f    //  255 or 0b01111111
@@ -51,10 +51,10 @@
         return 1; \
         } }) 
 
-typedef unsigned char o_byte; // 8 bits
-typedef unsigned short t_bytes; // 16 bits
-typedef unsigned long f_bytes; // 32 bits
-typedef unsigned long long e_bytes; // 64 bits
+typedef unsigned char       o_byte;     // 8  bits
+typedef unsigned short      t_bytes;    // 16 bits
+typedef unsigned long       f_bytes;    // 32 bits
+typedef unsigned long long  e_bytes;    // 64 bits
 
 /* data Chunk */
 typedef struct Data_Chunk {
@@ -102,6 +102,7 @@ typedef struct Wave_Properties {
     float duration; // wave duration
     unsigned long f_s; // sampling frequency
     unsigned long f; // tone frequency
+    float p;        // period
     unsigned long long total_number_of_samples;
     float a; // amplitude
     unsigned long long size;
@@ -122,7 +123,11 @@ int get_wave_type(char* str, wave_prop_t* wave_prop);
 int get_encoding(char* str, wave_prop_t* wave_prop);
 int set_type_encoding(wave_prop_t* wave_prop);
 void create_sine(double** samples, wave_prop_t* wave_prop);
+void create_square(double** samples, wave_prop_t* wave_prop);
+void create_triangle(double** samples, wave_prop_t* wave_prop);
+void create_saw(double** samples, wave_prop_t* wave_prop);
 short convert_double_to_pcm(double* sample);
+char sgn(double* x);
 void set_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
