@@ -16,10 +16,14 @@
 #define LVAL_MIN        0
 #define FVAL_MAX        300.0f
 #define FVAL_MIN        0.00001f
-#define PCM_MAX         (short) 0x7fff  //  32767 or 0b0111111111111111
-#define PCM_MIN         (short) 0x8000  // -32768 or 0b1000000000000000
-#define LAW_MAX         (char)  0x7f    //  255 or 0b01111111
-#define LAW_MIN         (char)  0x80    // -256 or 0b10000000
+#define UCHAR_VAL_MAX   255     
+#define UCHAR_VAL_MIN   0 
+#define S32BIT_MAX      (int) 0x7fffffff  //  2147483647 or 0b011111111111111111111111
+#define S32BIT_MIN      (int) 0x80000000  // -2147483648 or 0b100000000000000000000000
+#define S16BIT_MAX      (short) 0x7fff    //  32767 or 0b0111111111111111
+#define S16BIT_MIN      (short) 0x8000    // -32768 or 0b1000000000000000
+#define S8BIT_MAX       (char)  0x7f      //  255 or 0b01111111
+#define S8BIT_MIN       (char)  0x80      // -256 or 0b10000000
 #define A               87.6
 #define MU              255
 
@@ -38,6 +42,11 @@
 
 #define CHECK_LIMITS_FLOAT(x)     ({ if ((x) > FVAL_MAX || (x) < FVAL_MIN) { \
         fprintf(stderr, "Detected numbers out of range. Please check inputs and enter numbers between, \n%f and %f", FVAL_MIN, FVAL_MAX); \
+        return 1; \
+        } }) 
+
+#define CHECK_LIMITS_UCHAR(x)     ({ if ((x) > UCHAR_VAL_MAX || (x) < UCHAR_VAL_MIN) { \
+        fprintf(stderr, "Detected numbers out of range. Please check inputs and enter numbers between, \n%d and %d", UCHAR_VAL_MIN, UCHAR_VAL_MAX); \
         return 1; \
         } }) 
 
@@ -126,10 +135,15 @@ void create_sine(double** samples, wave_prop_t* wave_prop);
 void create_square(double** samples, wave_prop_t* wave_prop);
 void create_triangle(double** samples, wave_prop_t* wave_prop);
 void create_saw(double** samples, wave_prop_t* wave_prop);
-short convert_double_to_pcm(double* sample);
+char convert_double_to_pcm_8bit_signed(double* sample);
+short convert_double_to_pcm_16bit_signed(double* sample);
+int convert_double_to_pcm_32bit_signed(double* sample);
 char sgn(double* x);
 void set_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
+void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+void encode_pcm_signed_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+void encode_pcm_signed_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 void encode_float_64bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
