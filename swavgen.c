@@ -147,22 +147,22 @@ int set_type_encoding(wave_prop_t* wave_prop) {
 
     switch (wave_prop->encoding) {
         case 'p':
-            wave_prop->seth = &set_pcm;
+            wave_prop->seth = &set_header_pcm;
             wave_prop->outp = &output_pcm;
             wave_prop->encd = &encode_pcm_signed_16bit;
             break;
         case 'f':
-            wave_prop->seth = &set_ieee_float;
+            wave_prop->seth = &set_header_ieee_float_64bit;
             wave_prop->outp = &output_non_pcm;
-            wave_prop->encd = &encode_float_64bit;
+            wave_prop->encd = &encode_ieee_float_64bit;
             break;
         case 'a':
-            wave_prop->seth = &set_a_law;
+            wave_prop->seth = &set_header_a_law;
             wave_prop->outp = &output_non_pcm;
             wave_prop->encd = &encode_a_law;
             break;
         case 'm':
-            wave_prop->seth = &set_mu_law;
+            wave_prop->seth = &set_header_mu_law;
             wave_prop->outp = &output_non_pcm;
             wave_prop->encd = &encode_mu_law;
             break;
@@ -220,7 +220,7 @@ char sgn(double* x) {
     return sgn;
 }
 
-void set_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
+void set_header_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
 
     /* Default to 2 bytes of data */
     wave_prop->bytes_per_sample = 2;
@@ -252,7 +252,7 @@ void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_
     }
 }
 
-void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+void set_header_ieee_float_64bit(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
 
     /* RIFF Chunk */
     strcpy(riff_chunk->chunkID, "RIFF");
@@ -279,14 +279,14 @@ void set_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_
     data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
 }
 
-void encode_float_64bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
+void encode_ieee_float_64bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     *encoded_samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(short));
     for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
         ((double*)*encoded_samples)[n] = samples[n];
     }
 }
 
-void set_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
+void set_header_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
 
     /* Default to 1 byte of data */
     wave_prop->bytes_per_sample = 1;
@@ -372,7 +372,7 @@ void encode_a_law(double* samples, void** encoded_samples, wave_prop_t* wave_pro
     }
 }
 
-void set_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
+void set_header_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
 
     /* Default to 1 byte of data */
     wave_prop->bytes_per_sample = 1;
