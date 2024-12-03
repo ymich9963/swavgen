@@ -21,6 +21,9 @@ int main (int argc, char** argv) {
         printf("Error opening file...exiting.");
         return 1;
     }
+
+    /* Check if the sample length inputted is appropriate for the encoding */
+    CHECK_ERR(check_encoding_bytes(&wave_prop));
     
     /* Set the encoding and wave type based on inputs */
     CHECK_ERR(set_type_encoding(&wave_prop));
@@ -36,7 +39,8 @@ int main (int argc, char** argv) {
     void* encoded_samples = NULL;
     wave_prop.encd(samples, &encoded_samples, &wave_prop);
 
-    /* printf("%d", ((int*)encoded_samples)[50000]); */
+    printf("%d\n", ((unsigned short*)encoded_samples)[1000]);
+    printf("%lf\n", samples[1000]);
 
     /* Output the chunks */
     wave_prop.outp(file, encoded_samples, &wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);

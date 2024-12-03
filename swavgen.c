@@ -1,5 +1,4 @@
 #include "swavgen.h"
-#include <stdio.h>
 
 void set_defaults(wave_prop_t* wave_prop) {
     strcpy(wave_prop->file_name, "wav.wav");
@@ -10,7 +9,8 @@ void set_defaults(wave_prop_t* wave_prop) {
     wave_prop->p = 1.0f/wave_prop->f; // sine wave period 
     wave_prop->total_number_of_samples = wave_prop->f_s * wave_prop->duration;
     wave_prop->channels = 1;
-    wave_prop->bytes_per_sample = 8; // used in IEEE float format
+    wave_prop->bytes_per_sample = 0;
+    wave_prop->representation = 's'; // default to signed representation
     wave_prop->type = 's'; // sine wave
     wave_prop->encoding = 'f'; // IEEE float
 }
@@ -25,7 +25,7 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
     for (int i = 1; i < *argc; i++) {
         if (argv[i][0] != '-' && argv[i - 1][0] != '-') {
             CHECK_RES(sscanf(argv[i], "%s", strval));
-            CHECK_ERR(get_wave_type(strval, wave_prop));
+            CHECK_ERR(get_wave_type(argv[i], wave_prop));
             continue;
         }
         if (!(strcmp("-e", argv[i])) || !(strcmp("--encoding", argv[i]))) {
@@ -75,13 +75,37 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
         }
         if (!(strcmp("-l", argv[i])) || !(strcmp("--sample-length", argv[i]))) {
             CHECK_RES(sscanf(argv[i + 1], "%d", &ival));
-            wave_prop->bytes_per_sample = ival;
+            wave_prop->bytes_per_sample = ival / 8;
+            continue;
+        }
+        if (!(strcmp("-r", argv[i])) || !(strcmp("--representation", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%s", strval));
+            CHECK_ERR(get_represenation(strval, wave_prop));
             continue;
         }
         if (!(strcmp("-o", argv[i])) || !(strcmp("--output", argv[i]))) {
             CHECK_RES(sscanf(argv[i + 1], "%s", strval));
             strcpy(wave_prop->file_name, strval);
             continue;
+        }
+    }
+    return 0;
+}
+
+int check_encoding_bytes(wave_prop_t* wave_prop) {
+    if (wave_prop->encoding == 'p') {
+        switch (wave_prop->bytes_per_sample) {
+            case 1:
+                break;
+            case 2:
+                break;
+            case 3:
+                break;
+            case 4:
+                break;
+            default:
+                printf("Sample bits must be 8, 16, 24, or 32. Please specify with '-l' or '--sample-length'.");
+                return 1;
         }
     }
     return 0;
@@ -128,7 +152,22 @@ int get_encoding(char* str, wave_prop_t* wave_prop) {
         wave_prop->encoding = 'm';
         return 0;
     } else {
-        printf("Unknown encoding. Please enter either, 'PCM 'or 'IEEE-float'.");
+        printf("\nUnknown encoding. Please enter either, 'PCM', 'IEEE-float', 'A-law', or 'Mu-law'.\n");
+        return 1;
+    }
+}
+
+int get_represenation(char* str, wave_prop_t* wave_prop) {
+
+    if (!(strcmp("signed", str))) {
+        wave_prop->representation = 's';
+        return 0;
+    }
+    if (!(strcmp("unsigned", str))) {
+        wave_prop->representation = 'u';
+        return 0;
+    } else {
+        printf("\nUnknown binary representation. Please enter either, 'signed' or 'unsigned'.\n");
         return 1;
     }
 }
@@ -148,7 +187,7 @@ int set_type_encoding(wave_prop_t* wave_prop) {
             wave_prop->wave = &create_saw;
             break;
         default:
-            printf("How did we get here?\n");
+            printf("\nWave type not implemented.\n");
             return 1;
     }
 
@@ -174,7 +213,7 @@ int set_type_encoding(wave_prop_t* wave_prop) {
             wave_prop->encd = &encode_mu_law;
             break;
         default:
-            printf("How did we get here?\n");
+            printf("\nEncoding not implemented.\n");
             return 1;
     } 
     return 0;
@@ -243,6 +282,30 @@ int convert_double_to_pcm_32bit_signed(double* sample) {
     }
 }
 
+unsigned char convert_double_to_pcm_8bit_unsigned(double* sample) {
+    if (*sample >= 0) {
+        return ((U8BIT_MAX-1)*0.5 * *sample) + (U8BIT_MAX+1)*0.5;
+    } else {
+        return ((U8BIT_MAX-1)*0.5 * *sample) + (U8BIT_MAX-1)*0.5;
+    }
+}
+
+unsigned short convert_double_to_pcm_16bit_unsigned(double* sample) {
+    if (*sample >= 0) {
+        return ((U16BIT_MAX-1)*0.5 * *sample) + (U16BIT_MAX+1)*0.5;
+    } else {
+        return ((U16BIT_MAX-1)*0.5 * *sample) + (U16BIT_MAX-1)*0.5;
+    }
+}
+
+unsigned int convert_double_to_pcm_32bit_unsigned(double* sample) {
+    if (*sample >= 0) {
+        return ((U32BIT_MAX-1)*0.5 * *sample) + (U32BIT_MAX+1)*0.5;
+    } else {
+        return ((U32BIT_MAX-1)*0.5 * *sample) + (U32BIT_MAX-1)*0.5;
+    }
+}
+
 void set_header_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
 
     /* Set as NULL for it to not be unused */
@@ -268,25 +331,57 @@ void set_header_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_
 }
 
 void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    switch (wave_prop->bytes_per_sample) {
-        case 1:
-            *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * sizeof(char));
-            encode_pcm_signed_8bit(samples, encoded_samples, wave_prop);
+    switch (wave_prop->representation) {
+        case 's':
+            switch (wave_prop->bytes_per_sample) {
+                case 1:
+                    *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * sizeof(char));
+                    encode_pcm_signed_8bit(samples, encoded_samples, wave_prop);
+                    break;
+                case 2:
+                    *encoded_samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short));
+                    encode_pcm_signed_16bit(samples, encoded_samples, wave_prop);
+                    break;
+                case 3:
+                    break;
+                case 4:
+                    *encoded_samples = (int*) malloc(wave_prop->total_number_of_samples * sizeof(int));
+                    encode_pcm_signed_32bit(samples, encoded_samples, wave_prop);
+                    break;
+                default:
+                    printf("\nSample byte length in signed is not implemented.\n");
+                    break;
+            }
             break;
-        case 2:
-            *encoded_samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short));
-            encode_pcm_signed_16bit(samples, encoded_samples, wave_prop);
-            break;
-        case 3:
-            break;
-        case 4:
-            *encoded_samples = (int*) malloc(wave_prop->total_number_of_samples * sizeof(int));
-            encode_pcm_signed_32bit(samples, encoded_samples, wave_prop);
+        case 'u':
+            switch (wave_prop->bytes_per_sample) {
+                case 1:
+                    *encoded_samples = (unsigned char*) malloc(wave_prop->total_number_of_samples * sizeof(unsigned char));
+                    encode_pcm_unsigned_8bit(samples, encoded_samples, wave_prop);
+                    break;
+                case 2:
+                    *encoded_samples = (unsigned short*) malloc(wave_prop->total_number_of_samples * sizeof(unsigned short));
+                    encode_pcm_unsigned_16bit(samples, encoded_samples, wave_prop);
+                    printf("%d\n", ((unsigned short*)*encoded_samples)[1000]);
+                    printf("%lf\n\n", samples[1000]);
+                    break;
+                case 3:
+                    break;
+                case 4:
+                    *encoded_samples = (unsigned int*) malloc(wave_prop->total_number_of_samples * sizeof(unsigned int));
+                    encode_pcm_unsigned_32bit(samples, encoded_samples, wave_prop);
+                    break;
+                default:
+                    printf("\nSample byte length in unsigned is not implemented.\n");
+                    break;
+            }
             break;
         default:
-            printf("How did we get here?\n");
+            printf("\nRepresentation not implemented.\n");
             break;
     }
+    printf("%d\n", ((unsigned short*)*encoded_samples)[1000]);
+    printf("%lf\n\n", samples[1000]);
 }
 
 void encode_pcm_signed_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
@@ -296,14 +391,39 @@ void encode_pcm_signed_8bit(double* samples, void** encoded_samples, wave_prop_t
 }
 
 void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
+    short sample;
     for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
         ((short*)*encoded_samples)[n] = convert_double_to_pcm_16bit_signed(&samples[n]);
+        sample = convert_double_to_pcm_16bit_signed(&samples[n]);
     }
 }
 
 void encode_pcm_signed_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
         ((int*)*encoded_samples)[n] = convert_double_to_pcm_32bit_signed(&samples[n]);
+    }
+}
+
+void encode_pcm_unsigned_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
+    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        ((unsigned char*)*encoded_samples)[n] = convert_double_to_pcm_8bit_unsigned(&samples[n]);
+    }
+}
+
+// FIX: Unsigned implementation sounds weird
+void encode_pcm_unsigned_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
+    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        ((unsigned short*)*encoded_samples)[n] = convert_double_to_pcm_16bit_unsigned(&samples[n]);
+        printf("%d\n", ((unsigned short*)*encoded_samples)[n]);
+        printf("%lf\n\n", samples[n]);
+    }
+    printf("%d\n", ((unsigned short*)*encoded_samples)[1000]);
+    printf("%lf\n\n", samples[1000]);
+}
+
+void encode_pcm_unsigned_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
+    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+        ((unsigned int*)*encoded_samples)[n] = convert_double_to_pcm_32bit_unsigned(&samples[n]);
     }
 }
 

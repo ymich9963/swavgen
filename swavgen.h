@@ -22,8 +22,14 @@
 #define S32BIT_MIN      (int) 0x80000000  // -2147483648 or 0b100000000000000000000000
 #define S16BIT_MAX      (short) 0x7fff    //  32767 or 0b0111111111111111
 #define S16BIT_MIN      (short) 0x8000    // -32768 or 0b1000000000000000
-#define S8BIT_MAX       (char)  0x7f      //  255 or 0b01111111
-#define S8BIT_MIN       (char)  0x80      // -256 or 0b10000000
+#define S8BIT_MAX       (char)  0x7f      //  127 or 0b01111111
+#define S8BIT_MIN       (char)  0x80      // -128 or 0b10000000
+#define U32BIT_MAX      (unsigned int) 0xffffffff  //  4294967295 or 0b111111111111111111111111
+#define U32BIT_MIN      (unsigned int) 0x00000000  //           0 or 0b1000000000000000000000000
+#define U16BIT_MAX      (unsigned short) 0xffff    //  65535 or 0b1111111111111111
+#define U16BIT_MIN      (unsigned short) 0x0000    //      0 or 0b0000000000000000
+#define U8BIT_MAX       (unsigned char)  0xff      //  255 or 0b11111111
+#define U8BIT_MIN       (unsigned char)  0x00      //    0 or 0b00000000
 #define A               87.6
 #define MU              255
 
@@ -117,6 +123,7 @@ typedef struct Wave_Properties {
     unsigned long long size;
     o_byte channels;
     o_byte bytes_per_sample;
+    o_byte representation;
     char type;
     char encoding;
     void (*defv)(wave_prop_t*); // Set default values 
@@ -128,8 +135,10 @@ typedef struct Wave_Properties {
 
 void set_defaults(wave_prop_t* wave_prop);
 int get_options(int* argc, char** argv, wave_prop_t* wave_prop);
+int check_encoding_bytes(wave_prop_t* wave_prop);
 int get_wave_type(char* str, wave_prop_t* wave_prop);
 int get_encoding(char* str, wave_prop_t* wave_prop);
+int get_represenation(char* str, wave_prop_t* wave_prop);
 int set_type_encoding(wave_prop_t* wave_prop);
 void create_sine(double** samples, wave_prop_t* wave_prop);
 void create_square(double** samples, wave_prop_t* wave_prop);
@@ -138,12 +147,18 @@ void create_saw(double** samples, wave_prop_t* wave_prop);
 char convert_double_to_pcm_8bit_signed(double* sample);
 short convert_double_to_pcm_16bit_signed(double* sample);
 int convert_double_to_pcm_32bit_signed(double* sample);
+unsigned char convert_double_to_pcm_8bit_unsigned(double* sample);
+unsigned short convert_double_to_pcm_16bit_unsigned(double* sample);
+unsigned int convert_double_to_pcm_32bit_unsigned(double* sample);
 char sgn(double* x);
 void set_header_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_signed_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_signed_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+void encode_pcm_unsigned_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+void encode_pcm_unsigned_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+void encode_pcm_unsigned_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_header_ieee_float_64bit(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 void encode_ieee_float_64bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_header_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
