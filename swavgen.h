@@ -159,7 +159,9 @@ void encode_pcm_signed_32bit(double* samples, void** encoded_samples, wave_prop_
 void encode_pcm_unsigned_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_unsigned_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_unsigned_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
-void set_header_ieee_float_64bit(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
+void set_header_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
+void encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+void encode_ieee_float_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_ieee_float_64bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_header_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
 char a_law_compress_old(double* x);
