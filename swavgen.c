@@ -446,7 +446,6 @@ void set_header_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt
     data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
 }
 
-// FIX: THis isn;t working
 void encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     switch (wave_prop->bytes_per_sample) {
         case 4:

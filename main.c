@@ -39,9 +39,6 @@ int main (int argc, char** argv) {
     void* encoded_samples = NULL;
     wave_prop.encd(samples, &encoded_samples, &wave_prop);
 
-    printf("%d\n", ((unsigned short*)encoded_samples)[0]);
-    printf("%lf\n", samples[0]);
-
     /* Output the chunks */
     wave_prop.outp(file, encoded_samples, &wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
 
