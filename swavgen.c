@@ -75,7 +75,7 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
         }
         if (!(strcmp("-l", argv[i])) || !(strcmp("--sample-length", argv[i]))) {
             CHECK_RES(sscanf(argv[i + 1], "%d", &ival));
-            wave_prop->bytes_per_sample = ival / 8;
+            wave_prop->bytes_per_sample = ival / 8; // variable is called bytes but it's actually bits.
             continue;
         }
         if (!(strcmp("-r", argv[i])) || !(strcmp("--representation", argv[i]))) {
