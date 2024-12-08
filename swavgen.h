@@ -125,7 +125,9 @@ typedef struct Wave_Properties {
     o_byte bytes_per_sample;
     o_byte representation;
     char type;
+    char typestr[10];
     char encoding;
+    char encodingstr[10];
     void (*defv)(wave_prop_t*); // Set default values 
     void (*seth)(wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Set header values 
     void (*wave)(double**, wave_prop_t*); // Wave generation function 

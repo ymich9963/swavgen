@@ -3,6 +3,7 @@
 // TODO: Use other types of encoding PCM (8/16/24/32 unsigned)
 // TODO: Make other waves i.e. clipped waves.
 // TODO: Make use of the extensible format
+// FIX: Try to figure out 2-channel 16-bit PCM. Probably something to do with using the channels in the sample arr.
 
 int main (int argc, char** argv) {
 

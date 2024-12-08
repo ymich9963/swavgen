@@ -12,7 +12,9 @@ void set_defaults(wave_prop_t* wave_prop) {
     wave_prop->bytes_per_sample = 0;
     wave_prop->representation = 's'; // default to signed representation
     wave_prop->type = 's'; // sine wave
+    strcpy(wave_prop->typestr, "sine"); // sine 
     wave_prop->encoding = 'f'; // IEEE float
+    strcpy(wave_prop->encodingstr, "IEEE-float"); // IEEE-float
 }
 
 int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
@@ -83,6 +85,11 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
             CHECK_ERR(get_represenation(strval, wave_prop));
             continue;
         }
+        if (!(strcmp("-c", argv[i])) || !(strcmp("--channels", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%d", &ival));
+            wave_prop->channels = ival; 
+            continue;
+        }
         if (!(strcmp("-o", argv[i])) || !(strcmp("--output", argv[i]))) {
             CHECK_RES(sscanf(argv[i + 1], "%s", strval));
             strcpy(wave_prop->file_name, strval);
@@ -115,46 +122,36 @@ int get_wave_type(char* str, wave_prop_t* wave_prop) {
 
     if (!(strcmp("sine", str))) {
         wave_prop->type = 's';
-        return 0;
-    }
-    if (!(strcmp("square", str))) {
+    } else if (!(strcmp("square", str))) {
         wave_prop->type = 'q';
-        return 0;
-    }
-    if (!(strcmp("triangle", str))) {
+    } else if (!(strcmp("triangle", str))) {
         wave_prop->type = 't';
-        return 0;
-    }
-    if (!(strcmp("saw", str))) {
+    } else if (!(strcmp("saw", str))) {
         wave_prop->type = 'w';
-        return 0;
     } else {
         printf("\nUnknown wave type. Please enter either, 'sine', 'square', 'triangle', or 'saw'.\n");
         return 1;
     }
+    strcpy(wave_prop->typestr, str);
+    return 0;
 }
 
 int get_encoding(char* str, wave_prop_t* wave_prop) {
 
     if (!(strcmp("PCM", str))) {
         wave_prop->encoding = 'p';
-        return 0;
-    }
-    if (!(strcmp("IEEE-float", str))) {
+    } else if (!(strcmp("IEEE-float", str))) {
         wave_prop->encoding = 'f';
-        return 0;
-    }
-    if (!(strcmp("A-law", str))) {
+    } else if (!(strcmp("A-law", str))) {
         wave_prop->encoding = 'a';
-        return 0;
-    }
-    if (!(strcmp("Mu-law", str))) {
+    } else if (!(strcmp("Mu-law", str))) {
         wave_prop->encoding = 'm';
-        return 0;
     } else {
         printf("\nUnknown encoding. Please enter either, 'PCM', 'IEEE-float', 'A-law', or 'Mu-law'.\n");
         return 1;
     }
+    strcpy(wave_prop->encodingstr, str);
+    return 0;
 }
 
 int get_represenation(char* str, wave_prop_t* wave_prop) {
@@ -658,7 +655,7 @@ void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_pr
 
 void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
 
-    riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->bytes_per_sample);
+    riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->channels * wave_prop->bytes_per_sample);
 
     /* Calculating the unused format chunk members to fix the effect of padding */
     size_t unused_fmt_chunk = sizeof(fmt_chunk->cbSize) + sizeof(fmt_chunk->wValidBitsPerSample) + sizeof(fmt_chunk->dwChannelMask) + sizeof(fmt_chunk->SubFormat); 
@@ -681,7 +678,7 @@ void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, rif
 
     size_t used_fmt_chunk = sizeof(*fmt_chunk) - unused_fmt_chunk;
 
-    riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + used_fmt_chunk + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->bytes_per_sample);
+    riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + used_fmt_chunk + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->channels * wave_prop->bytes_per_sample);
 
     fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
     fwrite(fmt_chunk,  used_fmt_chunk,  1, file);
@@ -698,13 +695,17 @@ void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, rif
 
 void output_file_details(wave_prop_t* wave_prop) {
     printf("\n\tFile Name:\t%s"
+            "\n\tWave Type:\t%s"
             "\n\tSize:\t\t%lld"
             "\n\tDuration:\t%f"
+            "\n\tEncoding:\t%s"
             "\n\tSampling Freq.:\t%ld"
             "\n\tTone Freq.:\t%ld"
-            "\n\tPeriod:\t\t%f"
+            "\n\tWave Period:\t%f"
             "\n\tTotal Samples:\t%lld"
+            "\n\tChannels:\t%d"
+            "\n\tSample Length:\t%d"
             "\n\n"
-            , wave_prop->file_name, wave_prop->size, wave_prop->duration, wave_prop->f_s, wave_prop->f, wave_prop->p, wave_prop->total_number_of_samples);
+            , wave_prop->file_name, wave_prop->typestr, wave_prop->size, wave_prop->duration, wave_prop->encodingstr, wave_prop->f_s, wave_prop->f, wave_prop->p, wave_prop->total_number_of_samples, wave_prop->channels, wave_prop->bytes_per_sample * 8);
 }
 
