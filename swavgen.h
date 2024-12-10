@@ -72,12 +72,10 @@ typedef unsigned long       f_bytes;    // 32 bits
 typedef unsigned long long  e_bytes;    // 64 bits
 
 /* data Chunk */
+// FIX: Fit sampled_data into the struct.
 typedef struct Data_Chunk {
     char chunkID[4]; // "data"
     f_bytes chunk_size;
-    // FIX: Get it to work with the struct!
-    // double* sampled_data;
-    // o_byte padding;
 }data_chunk_t;
 
 /* fact Chunk */

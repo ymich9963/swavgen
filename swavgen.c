@@ -7,8 +7,8 @@ void set_defaults(wave_prop_t* wave_prop) {
     wave_prop->f_s = 48000; // sample rate
     wave_prop->f = 800; // sine wave frequency
     wave_prop->p = 1.0f/wave_prop->f; // sine wave period 
-    wave_prop->total_number_of_samples = wave_prop->f_s * wave_prop->duration;
     wave_prop->channels = 1;
+    wave_prop->total_number_of_samples = wave_prop->f_s * wave_prop->duration;
     wave_prop->bytes_per_sample = 0;
     wave_prop->representation = 's'; // default to signed representation
     wave_prop->type = 's'; // sine wave
@@ -53,6 +53,7 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
             CHECK_RES(sscanf(argv[i + 1], "%ld", &lval));
             CHECK_LIMITS_LONG(lval);
             wave_prop->f_s = lval;
+            /* wave_prop->total_number_of_samples = wave_prop->f_s * wave_prop->duration * wave_prop->channels; */
             wave_prop->total_number_of_samples = wave_prop->f_s * wave_prop->duration;
             continue;
         }
@@ -60,6 +61,7 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
             CHECK_RES(sscanf(argv[i + 1], "%f", &fval));
             CHECK_LIMITS_FLOAT(fval);
             wave_prop->duration = fval;
+            /* wave_prop->total_number_of_samples = wave_prop->f_s * wave_prop->duration * wave_prop->channels; */
             wave_prop->total_number_of_samples = wave_prop->f_s * wave_prop->duration;
             continue;
         }
@@ -217,9 +219,9 @@ int set_type_encoding(wave_prop_t* wave_prop) {
 }
 
 void create_sine(double** samples, wave_prop_t* wave_prop) {
-    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
-    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        ((double*)*samples)[n] = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+    *samples = (double*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
+    for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        ((double*)*samples)[n] = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / (wave_prop->f_s * wave_prop->channels));
     }
 }
 
@@ -336,7 +338,7 @@ void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
                     encode_pcm_signed_8bit(samples, encoded_samples, wave_prop);
                     break;
                 case 2:
-                    *encoded_samples = (short*) malloc(wave_prop->total_number_of_samples * sizeof(short));
+                    *encoded_samples = (short*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(short));
                     encode_pcm_signed_16bit(samples, encoded_samples, wave_prop);
                     break;
                 case 3:
@@ -387,7 +389,7 @@ void encode_pcm_signed_8bit(double* samples, void** encoded_samples, wave_prop_t
 }
 
 void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         ((short*)*encoded_samples)[n] = convert_double_to_pcm_16bit_signed(&samples[n]);
     }
 }
@@ -655,15 +657,17 @@ void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_pr
 
 void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
 
-    riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->channels * wave_prop->bytes_per_sample);
-
     /* Calculating the unused format chunk members to fix the effect of padding */
     size_t unused_fmt_chunk = sizeof(fmt_chunk->cbSize) + sizeof(fmt_chunk->wValidBitsPerSample) + sizeof(fmt_chunk->dwChannelMask) + sizeof(fmt_chunk->SubFormat); 
 
+    size_t used_fmt_chunk = sizeof(*fmt_chunk) - unused_fmt_chunk;
+
+    riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + used_fmt_chunk + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->channels * wave_prop->bytes_per_sample);
+
     fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
-    fwrite(fmt_chunk,  sizeof(fmt_chunk_t) - unused_fmt_chunk,  1, file);
+    fwrite(fmt_chunk,  used_fmt_chunk,  1, file);
     fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
-    fwrite(sampled_data, wave_prop->total_number_of_samples * wave_prop->bytes_per_sample, 1, file);
+    fwrite(sampled_data, wave_prop->total_number_of_samples * wave_prop->channels * wave_prop->bytes_per_sample, 1, file);
 
     /* Padding added based on if the chunk size is odd or even */
     if (data_chunk->chunk_size % 2 != 0) {
@@ -673,12 +677,13 @@ void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_ch
 }
 
 void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+
     /* Calculating the unused format chunk members to fix the effect of padding */
     size_t unused_fmt_chunk = sizeof(fmt_chunk->wValidBitsPerSample) + sizeof(fmt_chunk->dwChannelMask) + sizeof(fmt_chunk->SubFormat); 
 
     size_t used_fmt_chunk = sizeof(*fmt_chunk) - unused_fmt_chunk;
 
-    riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + used_fmt_chunk + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->channels * wave_prop->bytes_per_sample);
+    riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + used_fmt_chunk + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->bytes_per_sample);
 
     fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
     fwrite(fmt_chunk,  used_fmt_chunk,  1, file);
