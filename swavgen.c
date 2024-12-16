@@ -227,28 +227,28 @@ void create_sine(double** samples, wave_prop_t* wave_prop) {
 
 void create_square(double** samples, wave_prop_t* wave_prop) {
     double sample;
-    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
-    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        sample = sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s);
+    *samples = (double*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
+    for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        sample = sin(2 * M_PI * wave_prop->f * n / (wave_prop->f_s * wave_prop->channels));
         ((double*)*samples)[n] = wave_prop->a * (double) sgn(&sample);
     }
 }
 
 void create_triangle(double** samples, wave_prop_t* wave_prop) {
-    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
+    *samples = (double*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
     /* Two implementations. Not sure which one is best. */
-    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        ((double*)*samples)[n] = (2 * wave_prop->a / M_PI) * asin(sin(2 * M_PI * wave_prop->f * n / wave_prop->f_s));
-        /* ((double*)*samples)[n] = wave_prop->a * (4 * fabs(((double)wave_prop->f * n / wave_prop->f_s) - (int)(((double)wave_prop->f * n / wave_prop->f_s) + 0.5f )) - 1); */
+    for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        ((double*)*samples)[n] = (2 * wave_prop->a / M_PI) * asin(sin(2 * M_PI * wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)));
+        /* ((double*)*samples)[n] = wave_prop->a * (4 * fabs(((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) - (int)(((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) + 0.5f )) - 1); */
     }
 }
 
 void create_saw(double** samples, wave_prop_t* wave_prop) {
-    *samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
+    *samples = (double*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
     /* Two implementations. Not sure which one is best. */
-    for (int n = 0; n < wave_prop->total_number_of_samples; n++) {
-        /* ((double*)*samples)[n] = wave_prop->a * (((double)wave_prop->f * n / wave_prop->f_s) - (int)((double)wave_prop->f * n / wave_prop->f_s)); */
-        ((double*)*samples)[n] = wave_prop->a * (2 * (((double)wave_prop->f * n / wave_prop->f_s) - (int)(0.5f + ((double)wave_prop->f * n / wave_prop->f_s))));
+    for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        /* ((double*)*samples)[n] = wave_prop->a * (((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) - (int)((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels))); */
+        ((double*)*samples)[n] = wave_prop->a * (2 * (((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) - (int)(0.5f + ((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)))));
     }
 }
 
