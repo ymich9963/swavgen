@@ -12,7 +12,9 @@
 #define WAVE_FORMAT_EXTENSIBLE  0xFFFE  // Determined by SubFormat
 
 #define MAX_FILE_NAME   100
-#define LVAL_MAX        999999999
+#define IVAL_MAX        64 
+#define IVAL_MIN        0
+#define LVAL_MAX        4294967295 
 #define LVAL_MIN        0
 #define FVAL_MAX        300.0f
 #define FVAL_MIN        0.00001f
@@ -41,18 +43,23 @@
         } }) 
 
 /* Check if value is between numerical limits */
-#define CHECK_LIMITS_LONG(x)     ({ if ((x) > LVAL_MAX || (x) < LVAL_MIN) { \
-        fprintf(stderr, "Detected numbers out of range. Please check inputs and enter numbers between, \n%d and %d", LVAL_MIN, LVAL_MAX); \
+#define CHECK_LIMITS_LONG(x)     ({ if ((x) >= LVAL_MAX || (x) <= LVAL_MIN) { \
+        fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %d and %lld.\n", LVAL_MIN, LVAL_MAX); \
         return 1; \
         } }) 
 
-#define CHECK_LIMITS_FLOAT(x)     ({ if ((x) > FVAL_MAX || (x) < FVAL_MIN) { \
-        fprintf(stderr, "Detected numbers out of range. Please check inputs and enter numbers between, \n%f and %f", FVAL_MIN, FVAL_MAX); \
+#define CHECK_LIMITS_FLOAT(x)     ({ if ((x) >= FVAL_MAX || (x) <= FVAL_MIN) { \
+        fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %f and %f.\n", FVAL_MIN, FVAL_MAX); \
         return 1; \
         } }) 
 
-#define CHECK_LIMITS_UCHAR(x)     ({ if ((x) > UCHAR_VAL_MAX || (x) < UCHAR_VAL_MIN) { \
-        fprintf(stderr, "Detected numbers out of range. Please check inputs and enter numbers between, \n%d and %d", UCHAR_VAL_MIN, UCHAR_VAL_MAX); \
+#define CHECK_LIMITS_UCHAR(x)     ({ if ((x) >= UCHAR_VAL_MAX || (x) <= UCHAR_VAL_MIN) { \
+        fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %d and %d.\n", UCHAR_VAL_MIN, UCHAR_VAL_MAX); \
+        return 1; \
+        } }) 
+
+#define CHECK_LIMITS_INT(x)     ({ if ((x) >= IVAL_MAX || (x) <= IVAL_MIN) { \
+        fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %d and %d.\n", IVAL_MIN, IVAL_MAX); \
         return 1; \
         } }) 
 
@@ -113,19 +120,23 @@ typedef struct Wave_Properties wave_prop_t;
 typedef struct Wave_Properties {
     char file_name[MAX_FILE_NAME];
     float duration; // wave duration
-    unsigned long f_s; // sampling frequency
-    unsigned long f; // tone frequency
+    f_bytes f_s; // sampling frequency
+    f_bytes f; // tone frequency
     float p;        // period
-    unsigned long long total_number_of_samples;
+    e_bytes total_number_of_samples;
     float a; // amplitude
-    unsigned long long size;
+    e_bytes size;
     o_byte channels;
     o_byte bytes_per_sample;
     o_byte representation;
     char type;
     char typestr[10];
-    char encoding;
+    int encoding;
     char encodingstr[10];
+    o_byte extensible;
+    o_byte padding;
+    t_bytes valid_bits;
+    f_bytes channel_mask;
     void (*defv)(wave_prop_t*); // Set default values 
     void (*seth)(wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Set header values 
     void (*wave)(double**, wave_prop_t*); // Wave generation function 
@@ -171,7 +182,9 @@ void set_header_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chu
 char mu_law_compress_old(double* x);
 char mu_law_compress (short* x);
 void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+void set_header_extensible(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
 void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
 void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
+void output_extensible(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
 void output_file_details(wave_prop_t* wave_prop);
 
