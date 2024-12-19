@@ -1,5 +1,4 @@
 #include "swavgen.h"
-#include <stdio.h>
 
 void set_defaults(wave_prop_t* wave_prop) {
     strcpy(wave_prop->file_name, "wav.wav");
@@ -19,6 +18,7 @@ void set_defaults(wave_prop_t* wave_prop) {
     wave_prop->padding = 0;
     wave_prop->valid_bits = 8 * wave_prop->bytes_per_sample;
     wave_prop->channel_mask = 0;
+    wave_prop->extensible = 0;
 }
 
 int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
@@ -81,7 +81,8 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
         }
         if (!(strcmp("-l", argv[i])) || !(strcmp("--sample-length", argv[i]))) {
             CHECK_RES(sscanf(argv[i + 1], "%d", &ival));
-            wave_prop->bytes_per_sample = ival / 8; // variable is called bytes but it's actually bits.
+            wave_prop->bytes_per_sample = ival / 8; // variable is called bytes but it's inputted as bits.
+            wave_prop->valid_bits = ival;
             continue;
         }
         if (!(strcmp("-r", argv[i])) || !(strcmp("--representation", argv[i]))) {
@@ -121,7 +122,14 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
     /* Need to check if valid bits are not more than 8 * bytes_per_sample 
      * Also need to check if settings are used that require the extenisble option
      * */
-    
+    if (wave_prop->valid_bits > wave_prop->bytes_per_sample * 8) {
+        fprintf(stderr, "Valid bits must not be more than the bits per sample.");
+        return 1;
+    }
+    if (wave_prop->channel_mask != 0 && wave_prop->extensible != 1) {
+        fprintf(stderr, "If using channel masks, the extensible format must be enabled with '-x' or '--extensible'.");
+        return 1;
+    }
 
     return 0;
 }
@@ -138,7 +146,7 @@ int check_encoding_bytes(wave_prop_t* wave_prop) {
             case 4:
                 break;
             default:
-                printf("Sample bits must be 8, 16, 24, or 32. Please specify with '-l' or '--sample-length'.");
+                printf("\nSample bits must be 8, 16, 24, or 32. Please specify with '-l' or '--sample-length'.\n");
                 return 1;
         }
     }
@@ -365,7 +373,7 @@ void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
         case 's':
             switch (wave_prop->bytes_per_sample) {
                 case 1:
-                    *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * sizeof(char));
+                    *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(char));
                     encode_pcm_signed_8bit(samples, encoded_samples, wave_prop);
                     break;
                 case 2:
@@ -375,7 +383,7 @@ void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
                 case 3:
                     break;
                 case 4:
-                    *encoded_samples = (int*) malloc(wave_prop->total_number_of_samples * sizeof(int));
+                    *encoded_samples = (int*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(int));
                     encode_pcm_signed_32bit(samples, encoded_samples, wave_prop);
                     break;
                 default:
@@ -386,12 +394,12 @@ void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
         case 'u':
             switch (wave_prop->bytes_per_sample) {
                 case 1:
-                    *encoded_samples = (unsigned char*) malloc(wave_prop->total_number_of_samples * sizeof(unsigned char));
+                    *encoded_samples = (unsigned char*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(unsigned char));
                     encode_pcm_unsigned_8bit(samples, encoded_samples, wave_prop);
                     break;
                 case 2:
                     printf("\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:", wave_prop->bytes_per_sample);
-                    *encoded_samples = (unsigned short*) malloc(wave_prop->total_number_of_samples * sizeof(unsigned short));
+                    *encoded_samples = (unsigned short*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(unsigned short));
                     encode_pcm_unsigned_16bit(samples, encoded_samples, wave_prop);
                     break;
                 case 3:
@@ -399,7 +407,7 @@ void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
                     break;
                 case 4:
                     printf("\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:", wave_prop->bytes_per_sample);
-                    *encoded_samples = (unsigned int*) malloc(wave_prop->total_number_of_samples * sizeof(unsigned int));
+                    *encoded_samples = (unsigned int*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(unsigned int));
                     encode_pcm_unsigned_32bit(samples, encoded_samples, wave_prop);
                     break;
                 default:
@@ -414,7 +422,7 @@ void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
 }
 
 void encode_pcm_signed_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         ((char*)*encoded_samples)[n] = convert_double_to_pcm_8bit_signed(&samples[n]);
     }
 }
@@ -426,25 +434,25 @@ void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_
 }
 
 void encode_pcm_signed_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         ((int*)*encoded_samples)[n] = convert_double_to_pcm_32bit_signed(&samples[n]);
     }
 }
 
 void encode_pcm_unsigned_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         ((unsigned char*)*encoded_samples)[n] = convert_double_to_pcm_8bit_unsigned(&samples[n]);
     }
 }
 
 void encode_pcm_unsigned_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         ((unsigned short*)*encoded_samples)[n] = convert_double_to_pcm_16bit_unsigned(&samples[n]);
     }
 }
 
 void encode_pcm_unsigned_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         ((unsigned int*)*encoded_samples)[n] = convert_double_to_pcm_32bit_unsigned(&samples[n]);
     }
 }
@@ -484,11 +492,11 @@ void set_header_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt
 void encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     switch (wave_prop->bytes_per_sample) {
         case 4:
-            *encoded_samples = (float*) malloc(wave_prop->total_number_of_samples * sizeof(float));
+            *encoded_samples = (float*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(float));
             encode_ieee_float_32bit(samples, encoded_samples, wave_prop);
             break;
         case 8:
-            *encoded_samples = (double*) malloc(wave_prop->total_number_of_samples * sizeof(double));
+            *encoded_samples = (double*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
             encode_ieee_float_64bit(samples, encoded_samples, wave_prop);
             break;
         default:
@@ -498,13 +506,13 @@ void encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wav
 }
 
 void encode_ieee_float_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         ((float*)*encoded_samples)[n] = (float)samples[n];
     }
 }
 
 void encode_ieee_float_64bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         ((double*)*encoded_samples)[n] = samples[n];
     }
 }
@@ -593,7 +601,7 @@ char a_law_compress(short* x) {
 
 void encode_a_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     short pcm_sample;
-    *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * sizeof(char));
+    *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(char));
     for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
         pcm_sample = convert_double_to_pcm_16bit_signed(&samples[n]);
         ((char*)*encoded_samples)[n] = a_law_compress(&pcm_sample);
@@ -615,7 +623,7 @@ void set_header_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chu
     fmt_chunk->wFormatTag = wave_prop->encoding;
     fmt_chunk->nChannels = wave_prop->channels;
     fmt_chunk->nSamplesPerSec = wave_prop->f_s;
-    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample; // 8 bit data
+    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
     fmt_chunk->cbSize = 0;
@@ -694,8 +702,8 @@ char mu_law_compress(short *x) {
 
 void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     short pcm_sample;
-    *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * sizeof(char));
-    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+    *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(char));
+    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         pcm_sample = convert_double_to_pcm_16bit_signed(&samples[n]);
         ((char*)*encoded_samples)[n] = mu_law_compress(&pcm_sample);
     }
@@ -713,7 +721,7 @@ void set_header_extensible(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt
     fmt_chunk->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
     fmt_chunk->nChannels = wave_prop->channels;
     fmt_chunk->nSamplesPerSec = wave_prop->f_s;
-    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample; // 8 bit data
+    fmt_chunk->nAvgBytesPerSec = wave_prop->f_s * wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->nBlockAlign = wave_prop->channels * wave_prop->bytes_per_sample;
     fmt_chunk->wBitsPerSample = 8 * wave_prop->bytes_per_sample;
     fmt_chunk->cbSize = 22;
@@ -786,6 +794,10 @@ void output_extensible(FILE * file, void* sampled_data, wave_prop_t* wave_prop, 
 
     fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
     fwrite(fmt_chunk,  sizeof(fmt_chunk_t),  1, file);
+    /* o_byte cue_chunk[60]; */
+    /* memcpy(cue_chunk, "\x00", 60); */
+    /* memcpy(cue_chunk, "cue \x34", 5); */
+    /* fwrite(cue_chunk,  sizeof(cue_chunk),  1, file); */
     fwrite(fact_chunk, sizeof(fact_chunk_t), 1, file);
     fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
     fwrite(sampled_data, wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels, 1, file);

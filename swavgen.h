@@ -35,6 +35,27 @@
 #define A               87.6
 #define MU              255
 
+/* Channel Masks */
+#define SPEAKER_FRONT_LEFT             0x1
+#define SPEAKER_FRONT_RIGHT            0x2
+#define SPEAKER_FRONT_CENTER           0x4
+#define SPEAKER_LOW_FREQUENCY          0x8
+#define SPEAKER_BACK_LEFT              0x10
+#define SPEAKER_BACK_RIGHT             0x20
+#define SPEAKER_FRONT_LEFT_OF_CENTER   0x40
+#define SPEAKER_FRONT_RIGHT_OF_CENTER  0x80
+#define SPEAKER_BACK_CENTER            0x100
+#define SPEAKER_SIDE_LEFT              0x200
+#define SPEAKER_SIDE_RIGHT             0x400
+#define SPEAKER_TOP_CENTER             0x800
+#define SPEAKER_TOP_FRONT_LEFT         0x1000
+#define SPEAKER_TOP_FRONT_CENTER       0x2000
+#define SPEAKER_TOP_FRONT_RIGHT        0x4000
+#define SPEAKER_TOP_BACK_LEFT          0x8000
+#define SPEAKER_TOP_BACK_CENTER        0x10000
+#define SPEAKER_TOP_BACK_RIGHT         0x20000
+#define SPEAKER_RESERVED               0x80000000
+
 /* Check macros */
 /* Check response from sscanf */
 #define CHECK_RES(x)        ({ if (!(x)) { \
@@ -155,13 +176,14 @@ void create_sine(double** samples, wave_prop_t* wave_prop);
 void create_square(double** samples, wave_prop_t* wave_prop);
 void create_triangle(double** samples, wave_prop_t* wave_prop);
 void create_saw(double** samples, wave_prop_t* wave_prop);
+void smooth_signal(double* samples, wave_prop_t* wave_prop);
+char sgn(double* x);
 char convert_double_to_pcm_8bit_signed(double* sample);
 short convert_double_to_pcm_16bit_signed(double* sample);
 int convert_double_to_pcm_32bit_signed(double* sample);
 unsigned char convert_double_to_pcm_8bit_unsigned(double* sample);
 unsigned short convert_double_to_pcm_16bit_unsigned(double* sample);
 unsigned int convert_double_to_pcm_32bit_unsigned(double* sample);
-char sgn(double* x);
 void set_header_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_signed_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);

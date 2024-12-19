@@ -2,8 +2,9 @@
 
 // TODO: Use other types of encoding like GSM or similar.
 // TODO: Make other waves i.e. clipped waves and approximated waves.
-// TODO: Make use of the extensible format.
-// TODO: Add soft transitions feature to remove popping.
+// TODO: Figure out channel mappings based on channel amount.
+// TODO: Figure out valid bytes.
+// FIX: Popping when playing and stopping the sound files.
 
 int main (int argc, char** argv) {
 
