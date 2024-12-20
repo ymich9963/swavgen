@@ -1,8 +1,8 @@
 #include "swavgen.h"
 
 void set_defaults(wave_prop_t* wave_prop) {
-    strcpy(wave_prop->file_name, "wav.wav");
-    wave_prop->a = 1;
+    strcpy(wave_prop->file_name, "wave.wav");
+    wave_prop->a = 1.0f;
     wave_prop->duration = 2.0; // seconds
     wave_prop->f_s = 48000; // sample rate
     wave_prop->f = 800; // sine wave frequency
@@ -761,7 +761,7 @@ void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_ch
 
     /* Padding added based on if the data chunk size is odd or even */
     if (wave_prop->padding) {
-        o_byte padding = 0;
+        uint8_t padding = 0;
         fwrite(&padding, sizeof(padding), 1, file);
     }
 }
@@ -783,7 +783,7 @@ void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, rif
 
     /* Padding added based on if the data chunk size is odd or even */
     if (wave_prop->padding) {
-        o_byte padding = 0;
+        uint8_t padding = 0;
         fwrite(&padding, sizeof(padding), 1, file);
     }
 }
@@ -807,7 +807,7 @@ void output_extensible(FILE * file, void* sampled_data, wave_prop_t* wave_prop, 
 
     /* Padding added based on if the data chunk size is odd or even */
     if (wave_prop->padding) {
-        o_byte padding = 0;
+        uint8_t padding = 0;
         fwrite(&padding, sizeof(padding), 1, file);
     }
 }
@@ -818,8 +818,8 @@ void output_file_details(wave_prop_t* wave_prop) {
             "\n\tSize:\t\t%lld"
             "\n\tDuration:\t%f"
             "\n\tEncoding:\t%s"
-            "\n\tSampling Freq.:\t%ld"
-            "\n\tTone Freq.:\t%ld"
+            "\n\tSampling Freq.:\t%u"
+            "\n\tTone Freq.:\t%u"
             "\n\tWave Period:\t%f"
             "\n\tTotal Samples:\t%lld"
             "\n\tChannels:\t%d"

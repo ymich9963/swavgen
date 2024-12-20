@@ -94,45 +94,40 @@
         return 1; \
         } }) 
 
-typedef unsigned char       o_byte;     // 8  bits
-typedef unsigned short      t_bytes;    // 16 bits
-typedef unsigned long       f_bytes;    // 32 bits
-typedef unsigned long long  e_bytes;    // 64 bits
-
 /* data Chunk */
 // FIX: Fit sampled_data into the struct.
 typedef struct Data_Chunk {
     char chunkID[4]; // "data"
-    f_bytes chunk_size;
+    uint32_t chunk_size;
 }data_chunk_t;
 
 /* fact Chunk */
 typedef struct Fact_Chunk {
     char chunkID[4]; // "fact"
-    f_bytes chunk_size;
-    f_bytes dwSampleLength;
+    uint32_t chunk_size;
+    uint32_t dwSampleLength;
 }fact_chunk_t;
 
 /* Full format chunk */
 typedef struct Format_Chunk {
     char chunkID[4]; // "fmt "
-    f_bytes chunk_size;
-    t_bytes wFormatTag;
-    t_bytes nChannels;
-    f_bytes nSamplesPerSec;
-    f_bytes nAvgBytesPerSec;
-    t_bytes nBlockAlign;
-    t_bytes wBitsPerSample;
-    t_bytes cbSize;
-    t_bytes wValidBitsPerSample;
-    f_bytes dwChannelMask;
-    o_byte SubFormat[16];
+    uint32_t chunk_size;
+    uint16_t wFormatTag;
+    uint16_t nChannels;
+    uint32_t nSamplesPerSec;
+    uint32_t nAvgBytesPerSec;
+    uint16_t nBlockAlign;
+    uint16_t wBitsPerSample;
+    uint16_t cbSize;
+    uint16_t wValidBitsPerSample;
+    uint32_t dwChannelMask;
+    uint8_t SubFormat[16];
 }fmt_chunk_t;
 
 /* Main RIFF chunk */
 typedef struct RIFF_Chunk {
     char chunkID[4]; // "RIFF"
-    f_bytes chunk_size;  // Number of chunks containing sample and format information 
+    uint32_t chunk_size;  // Number of chunks containing sample and format information 
     char waveID[4]; // "WAVE"
 }riff_chunk_t;
 
@@ -141,23 +136,23 @@ typedef struct Wave_Properties wave_prop_t;
 typedef struct Wave_Properties {
     char file_name[MAX_FILE_NAME];
     float duration; // wave duration
-    f_bytes f_s; // sampling frequency
-    f_bytes f; // tone frequency
+    uint32_t f_s; // sampling frequency
+    uint32_t f; // tone frequency
     float p;        // period
-    e_bytes total_number_of_samples;
+    uint64_t total_number_of_samples;
     float a; // amplitude
-    e_bytes size;
-    o_byte channels;
-    o_byte bytes_per_sample;
-    o_byte representation;
+    uint64_t size;
+    uint8_t channels;
+    uint8_t bytes_per_sample;
+    uint8_t representation;
     char type;
     char typestr[10];
-    int encoding;
+    uint16_t encoding;
     char encodingstr[10];
-    o_byte extensible;
-    o_byte padding;
-    t_bytes valid_bits;
-    f_bytes channel_mask;
+    uint8_t extensible;
+    uint8_t padding;
+    uint16_t valid_bits;
+    uint32_t channel_mask;
     void (*defv)(wave_prop_t*); // Set default values 
     void (*seth)(wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Set header values 
     void (*wave)(double**, wave_prop_t*); // Wave generation function 

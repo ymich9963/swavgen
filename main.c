@@ -1,9 +1,8 @@
 #include "swavgen.h"
 
-// TODO: Use other types of encoding like GSM or similar.
+// TODO: Implement IMA ADPCM.
+// TODO: Implement 24-bit PCM.
 // TODO: Make other waves i.e. clipped waves and approximated waves.
-// TODO: Figure out channel mappings based on channel amount.
-// TODO: Figure out valid bytes.
 // FIX: Popping when playing and stopping the sound files.
 
 int main (int argc, char** argv) {
@@ -20,7 +19,7 @@ int main (int argc, char** argv) {
 
     FILE * file = fopen(wave_prop.file_name, "wb");
     if (!(file)) {
-        printf("Error opening file...exiting.");
+        printf("\nError opening file...exiting.\n");
         return 1;
     }
 
