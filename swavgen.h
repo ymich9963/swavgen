@@ -22,12 +22,16 @@
 #define UCHAR_VAL_MIN   0 
 #define S32BIT_MAX      (int) 0x7fffffff  //  2147483647 or 0b011111111111111111111111
 #define S32BIT_MIN      (int) 0x80000000  // -2147483648 or 0b100000000000000000000000
+#define S24BIT_MAX      0x7fffff          //  8388607 or 0b011111111111
+#define S24BIT_MIN      0x800000          // -8388608 or 0b100000000000
 #define S16BIT_MAX      (short) 0x7fff    //  32767 or 0b0111111111111111
 #define S16BIT_MIN      (short) 0x8000    // -32768 or 0b1000000000000000
 #define S8BIT_MAX       (char)  0x7f      //  127 or 0b01111111
 #define S8BIT_MIN       (char)  0x80      // -128 or 0b10000000
 #define U32BIT_MAX      (unsigned int) 0xffffffff  //  4294967295 or 0b111111111111111111111111
 #define U32BIT_MIN      (unsigned int) 0x00000000  //           0 or 0b1000000000000000000000000
+#define U24BIT_MAX      0xffffff          //  8388607 or 0b011111111111
+#define U24BIT_MIN      0x000000          // -8388608 or 0b100000000000
 #define U16BIT_MAX      (unsigned short) 0xffff    //  65535 or 0b1111111111111111
 #define U16BIT_MIN      (unsigned short) 0x0000    //      0 or 0b0000000000000000
 #define U8BIT_MAX       (unsigned char)  0xff      //  255 or 0b11111111
@@ -160,6 +164,11 @@ typedef struct Wave_Properties {
     void (*outp)(FILE*, void*, wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Output function
 }wave_prop_t;
 
+// Used for signed 24-bit PCM
+// typedef struct int24 {
+//     int data:24;
+// }int24_t;
+
 void set_defaults(wave_prop_t* wave_prop);
 int get_options(int* argc, char** argv, wave_prop_t* wave_prop);
 int check_encoding_bytes(wave_prop_t* wave_prop);
@@ -173,19 +182,24 @@ void create_triangle(double** samples, wave_prop_t* wave_prop);
 void create_saw(double** samples, wave_prop_t* wave_prop);
 void smooth_signal(double* samples, wave_prop_t* wave_prop);
 char sgn(double* x);
-char convert_double_to_pcm_8bit_signed(double* sample);
-short convert_double_to_pcm_16bit_signed(double* sample);
-int convert_double_to_pcm_32bit_signed(double* sample);
-unsigned char convert_double_to_pcm_8bit_unsigned(double* sample);
-unsigned short convert_double_to_pcm_16bit_unsigned(double* sample);
-unsigned int convert_double_to_pcm_32bit_unsigned(double* sample);
+void fwrite_data(FILE * file, void* sampled_data, wave_prop_t* wave_prop);
+int8_t convert_double_to_pcm_8bit_signed(double* sample);
+int16_t convert_double_to_pcm_16bit_signed(double* sample);
+int32_t convert_double_to_pcm_24bit_signed(double* sample);
+int32_t convert_double_to_pcm_32bit_signed(double* sample);
+uint8_t convert_double_to_pcm_8bit_unsigned(double* sample);
+uint16_t convert_double_to_pcm_16bit_unsigned(double* sample);
+uint32_t convert_double_to_pcm_24bit_unsigned(double* sample);
+uint32_t convert_double_to_pcm_32bit_unsigned(double* sample);
 void set_header_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_signed_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+void encode_pcm_signed_24bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_signed_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_unsigned_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_unsigned_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+void encode_pcm_unsigned_24bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_pcm_unsigned_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_header_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk);
 void encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wave_prop);

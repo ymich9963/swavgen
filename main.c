@@ -1,8 +1,8 @@
 #include "swavgen.h"
 
 // TODO: Implement IMA ADPCM.
-// TODO: Implement 24-bit PCM.
 // TODO: Make other waves i.e. clipped waves and approximated waves.
+// TODO: Add '--raw' flag to output the data without the header data.
 // FIX: Popping when playing and stopping the sound files.
 
 int main (int argc, char** argv) {
