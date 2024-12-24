@@ -157,6 +157,7 @@ typedef struct Wave_Properties {
     uint8_t padding;
     uint16_t valid_bits;
     uint32_t channel_mask;
+    uint8_t raw;
     void (*defv)(wave_prop_t*); // Set default values 
     void (*seth)(wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Set header values 
     void (*wave)(double**, wave_prop_t*); // Wave generation function 
@@ -217,5 +218,6 @@ void set_header_extensible(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt
 void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
 void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
 void output_extensible(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
+void output_raw(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
 void output_file_details(wave_prop_t* wave_prop);
 

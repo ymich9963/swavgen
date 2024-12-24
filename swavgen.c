@@ -1,6 +1,4 @@
 #include "swavgen.h"
-#include <stdint.h>
-#include <stdio.h>
 
 void set_defaults(wave_prop_t* wave_prop) {
     strcpy(wave_prop->file_name, "wave.wav");
@@ -21,6 +19,7 @@ void set_defaults(wave_prop_t* wave_prop) {
     wave_prop->valid_bits = 8 * wave_prop->bytes_per_sample;
     wave_prop->channel_mask = 0;
     wave_prop->extensible = 0;
+    wave_prop->raw = 0;
 }
 
 int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
@@ -121,6 +120,10 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
             CHECK_RES(sscanf(argv[i + 1], "%ld", &lval));
             CHECK_LIMITS_LONG(lval);
             wave_prop->channel_mask = lval;
+            continue;
+        }
+        if (!(strcmp("--raw", argv[i]))) {
+            wave_prop->raw = 1;
             continue;
         }
     }
@@ -283,6 +286,10 @@ int set_type_encoding(wave_prop_t* wave_prop) {
     if (wave_prop->extensible) {
         wave_prop->seth = &set_header_extensible;
         wave_prop->outp = &output_extensible;
+    }
+
+    if (wave_prop->raw) {
+        wave_prop->outp = &output_raw;
     }
 
     return 0;
@@ -869,6 +876,17 @@ void output_extensible(FILE * file, void* sampled_data, wave_prop_t* wave_prop, 
     fwrite(fmt_chunk,  sizeof(fmt_chunk_t),  1, file);
     fwrite(fact_chunk, sizeof(fact_chunk_t), 1, file);
     fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
+    fwrite_data(file, sampled_data, wave_prop);
+
+    /* Padding added based on if the data chunk size is odd or even */
+    if (wave_prop->padding) {
+        uint8_t padding = 0;
+        fwrite(&padding, sizeof(padding), 1, file);
+    }
+}
+
+void output_raw(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+
     fwrite_data(file, sampled_data, wave_prop);
 
     /* Padding added based on if the data chunk size is odd or even */
