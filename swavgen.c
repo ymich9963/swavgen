@@ -5,7 +5,7 @@ void set_defaults(wave_prop_t* wave_prop) {
     wave_prop->a = 1.0f;
     wave_prop->duration = 2.0; // seconds
     wave_prop->f_s = 48000; // sample rate
-    wave_prop->f = 800; // sine wave frequency
+    wave_prop->f = 800.0f; // sine wave frequency
     wave_prop->p = 1.0f/wave_prop->f; // sine wave period 
     wave_prop->channels = 1;
     wave_prop->total_number_of_samples = wave_prop->f_s * wave_prop->duration * wave_prop->channels;
@@ -41,17 +41,17 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
             continue;
         }
         if (!(strcmp("-f", argv[i])) || !(strcmp("--frequency", argv[i]))) {
-            CHECK_RES(sscanf(argv[i + 1], "%ld", &lval));
-            CHECK_LIMITS_LONG(lval);
-            wave_prop->f = lval;
-            wave_prop->p = 1.0f/lval;
+            CHECK_RES(sscanf(argv[i + 1], "%f", &fval));
+            CHECK_LIMITS_FLOAT(fval);
+            wave_prop->f = fval;
+            wave_prop->p = (1.0f/fval) * 1e3;
             continue;
         }
         if (!(strcmp("-p", argv[i])) || !(strcmp("--period", argv[i]))) {
             CHECK_RES(sscanf(argv[i + 1], "%f", &fval));
             CHECK_LIMITS_FLOAT(fval);
             wave_prop->p = fval;
-            wave_prop->f = 1/fval;
+            wave_prop->f = 1/(fval * 1e-3);
             continue;
         }
         if (!(strcmp("-s", argv[i])) || !(strcmp("--sampling-frequency", argv[i]))) {
@@ -899,15 +899,15 @@ void output_raw(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_ch
 void output_file_details(wave_prop_t* wave_prop) {
     printf("\n\tFile Name:\t%s"
             "\n\tWave Type:\t%s"
-            "\n\tSize:\t\t%lld"
-            "\n\tDuration:\t%f"
+            "\n\tSize:\t\t%lld\t[Bytes]"
+            "\n\tDuration:\t%.4f\t[s]"
             "\n\tEncoding:\t%s"
-            "\n\tSampling Freq.:\t%u"
-            "\n\tTone Freq.:\t%u"
-            "\n\tWave Period:\t%f"
+            "\n\tSampling Freq.:\t%u\t[Hz]"
+            "\n\tTone Freq.:\t%.3f\t[Hz]"
+            "\n\tWave Period:\t%.4f\t[ms]"
             "\n\tTotal Samples:\t%lld"
             "\n\tChannels:\t%d"
-            "\n\tSample Length:\t%d"
+            "\n\tSample Length:\t%d\t[bits]"
             "\n\n"
             , wave_prop->file_name, wave_prop->typestr, wave_prop->size, wave_prop->duration, wave_prop->encodingstr, wave_prop->f_s, wave_prop->f, wave_prop->p, wave_prop->total_number_of_samples, wave_prop->channels, wave_prop->bytes_per_sample * 8);
 }

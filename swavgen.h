@@ -16,7 +16,7 @@
 #define IVAL_MIN        0
 #define LVAL_MAX        4294967295 
 #define LVAL_MIN        0
-#define FVAL_MAX        300.0f
+#define FVAL_MAX        9999999.9f
 #define FVAL_MIN        0.00001f
 #define UCHAR_VAL_MAX   255     
 #define UCHAR_VAL_MIN   0 
@@ -141,8 +141,8 @@ typedef struct Wave_Properties {
     char file_name[MAX_FILE_NAME];
     float duration; // wave duration
     uint32_t f_s; // sampling frequency
-    uint32_t f; // tone frequency
-    float p;        // period
+    double f; // tone frequency
+    float p;        // period, in ms
     uint64_t total_number_of_samples;
     float a; // amplitude
     uint64_t size;
