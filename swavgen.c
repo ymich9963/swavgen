@@ -6,7 +6,7 @@ void set_defaults(wave_prop_t* wave_prop) {
     wave_prop->duration = 2.0; // seconds
     wave_prop->f_s = 48000; // sample rate
     wave_prop->f = 800.0f; // sine wave frequency
-    wave_prop->p = 1.0f/wave_prop->f; // sine wave period 
+    wave_prop->p = 1.0f/(wave_prop->f * 1e-3); // sine wave period 
     wave_prop->channels = 1;
     wave_prop->total_number_of_samples = wave_prop->f_s * wave_prop->duration * wave_prop->channels;
     wave_prop->bytes_per_sample = 8; // default to 64-bit samples
@@ -143,50 +143,6 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
     return 0;
 }
 
-int check_encoding_bytes(wave_prop_t* wave_prop) {
-    if (wave_prop->encoding == WAVE_FORMAT_PCM) {
-        switch (wave_prop->bytes_per_sample) {
-            case 1:
-                break;
-            case 2:
-                break;
-            case 3:
-                break;
-            case 4:
-                break;
-            case 8:
-                break;
-            default:
-                printf("\nSample bits must be 8, 16, 24, or 32 for PCM. Please specify with '-l' or '--sample-length'.\n");
-                return 1;
-        }
-    }
-
-    if (wave_prop->encoding == WAVE_FORMAT_ALAW || wave_prop->encoding == WAVE_FORMAT_MULAW) {
-        switch (wave_prop->bytes_per_sample) {
-            case 1:
-                break;
-            default:
-                wave_prop->bytes_per_sample = 1;
-                printf("\nProgram defaulted to 8 sample bits. No other option available for A-law/Mu-law.\n");
-                return 0;
-        }
-    }
-
-    if (wave_prop->encoding == WAVE_FORMAT_IEEE_FLOAT) {
-        switch (wave_prop->bytes_per_sample) {
-            case 4:
-                break;
-            case 8:
-                break;
-            default:
-                printf("\nSample bits must be 32 or 64 for IEEE-float format. Please specify with '-l' or '--sample-length'.\n");
-                return 1;
-        }
-    }
-    return 0;
-}
-
 int get_wave_type(char* str, wave_prop_t* wave_prop) {
 
     if (!(strcmp("sine", str))) {
@@ -197,6 +153,8 @@ int get_wave_type(char* str, wave_prop_t* wave_prop) {
         wave_prop->type = 't';
     } else if (!(strcmp("saw", str))) {
         wave_prop->type = 'w';
+    } else if (!(strcmp("random", str))) {
+        wave_prop->type = 'r';
     } else {
         printf("\nUnknown wave type. Please enter either, 'sine', 'square', 'triangle', or 'saw'.\n");
         return 1;
@@ -215,6 +173,8 @@ int get_encoding(char* str, wave_prop_t* wave_prop) {
         wave_prop->encoding = WAVE_FORMAT_ALAW;
     } else if (!(strcmp("Mu-law", str))) {
         wave_prop->encoding = WAVE_FORMAT_MULAW;
+    } else if (!(strcmp("IMA-ADPCM", str))) {
+        wave_prop->encoding = WAVE_FORMAT_DVI_ADPCM;
     } else {
         printf("\nUnknown encoding. Please enter either, 'PCM', 'IEEE-float', 'A-law', or 'Mu-law'.\n");
         return 1;
@@ -252,6 +212,9 @@ int set_type_encoding(wave_prop_t* wave_prop) {
         case 'w':
             wave_prop->wave = &create_saw;
             break;
+        case 'r':
+            wave_prop->wave = &create_random;
+            break;
         default:
             printf("\nWave type '%c' not implemented.\n", wave_prop->type);
             return 1;
@@ -271,15 +234,15 @@ int set_type_encoding(wave_prop_t* wave_prop) {
         case WAVE_FORMAT_ALAW:
             wave_prop->seth = &set_header_a_law;
             wave_prop->outp = &output_non_pcm;
-            wave_prop->encd = &encode_a_law;
+            wave_prop->encd = &encode_companding;
             break;
         case WAVE_FORMAT_MULAW:
             wave_prop->seth = &set_header_mu_law;
             wave_prop->outp = &output_non_pcm;
-            wave_prop->encd = &encode_mu_law;
+            wave_prop->encd = &encode_companding;
             break;
         default:
-            printf("\nEncoding '%c' not implemented.\n", wave_prop->encoding);
+            printf("\nEncoding '%d' not implemented.\n", wave_prop->encoding);
             return 1;
     } 
 
@@ -326,6 +289,13 @@ void create_saw(double** samples, wave_prop_t* wave_prop) {
     for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         /* ((double*)*samples)[n] = wave_prop->a * (((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) - (int)((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels))); */
         ((double*)*samples)[n] = wave_prop->a * (2 * (((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) - (int)(0.5f + ((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)))));
+    }
+}
+
+void create_random(double** samples, wave_prop_t* wave_prop) {
+    *samples = (double*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
+    for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        ((double*)*samples)[n] = (2 * (double)rand()/RAND_MAX) - 1;
     }
 }
 
@@ -452,7 +422,7 @@ void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
                     encode_pcm_signed_32bit(samples, encoded_samples, wave_prop);
                     break;
                 default:
-                    printf("\nSample byte length in signed is not implemented.\n");
+                    printf("\nSample bits must be 8, 16, 24, or 32 for PCM. Please specify with '-l' or '--sample-length'.\n");
                     break;
             }
             break;
@@ -474,12 +444,12 @@ void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
                     encode_pcm_unsigned_32bit(samples, encoded_samples, wave_prop);
                     break;
                 default:
-                    printf("\nSample byte length in unsigned is not implemented.\n");
+                    printf("\nSample bits must be 8, 16, 24, or 32 for PCM. Please specify with '-l' or '--sample-length'.\n");
                     break;
             }
             break;
         default:
-            printf("\nRepresentation not implemented.\n");
+            printf("\nRepresentation not implemented. Please specify either 'signed' or 'unsigned' with '-r' or '--representation'.\n");
             break;
     }
 }
@@ -581,7 +551,7 @@ void encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wav
             encode_ieee_float_64bit(samples, encoded_samples, wave_prop);
             break;
         default:
-            printf("\nSample byte length is not implemented.\n");
+            printf("\nSample bits must be 32 or 64 for IEEE-float format. Please specify with '-l' or '--sample-length'.\n");
             break;
     }
 }
@@ -690,9 +660,6 @@ void encode_a_law(double* samples, void** encoded_samples, wave_prop_t* wave_pro
 
 void set_header_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
 
-    /* Default to 1 byte of data */
-    wave_prop->bytes_per_sample = 1;
-
     /* RIFF Chunk */
     strcpy(riff_chunk->chunkID, "RIFF");
     strcpy(riff_chunk->waveID, "WAVE");
@@ -786,6 +753,24 @@ void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_pr
     for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         pcm_sample = convert_double_to_pcm_16bit_signed(&samples[n]);
         ((char*)*encoded_samples)[n] = mu_law_compress(&pcm_sample);
+    }
+}
+
+void encode_companding(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
+    switch (wave_prop->encoding) {
+        case WAVE_FORMAT_ALAW:
+            encode_a_law(samples, encoded_samples, wave_prop);
+            break;
+        case WAVE_FORMAT_MULAW:
+            encode_mu_law(samples, encoded_samples, wave_prop);
+            break;
+        default:
+            break;
+    }
+
+    if (wave_prop->bytes_per_sample != 1) {
+        printf("\nProgram defaulted to 8 sample bits. No other option available for A-law/Mu-law.\n");
+        wave_prop->bytes_per_sample = 1;
     }
 }
 

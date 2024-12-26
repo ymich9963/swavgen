@@ -9,6 +9,7 @@
 #define WAVE_FORMAT_IEEE_FLOAT  0x0003  // IEEE float
 #define WAVE_FORMAT_ALAW        0x0006  // 8-bit ITU-T G.711 A-law
 #define WAVE_FORMAT_MULAW       0x0007  // 8-bit ITU-T G.711 µ-law
+#define WAVE_FORMAT_DVI_ADPCM   0x0011  // IMA ADPCM
 #define WAVE_FORMAT_EXTENSIBLE  0xFFFE  // Determined by SubFormat
 
 #define MAX_FILE_NAME   100
@@ -172,7 +173,6 @@ typedef struct Wave_Properties {
 
 void set_defaults(wave_prop_t* wave_prop);
 int get_options(int* argc, char** argv, wave_prop_t* wave_prop);
-int check_encoding_bytes(wave_prop_t* wave_prop);
 int get_wave_type(char* str, wave_prop_t* wave_prop);
 int get_encoding(char* str, wave_prop_t* wave_prop);
 int get_represenation(char* str, wave_prop_t* wave_prop);
@@ -181,6 +181,7 @@ void create_sine(double** samples, wave_prop_t* wave_prop);
 void create_square(double** samples, wave_prop_t* wave_prop);
 void create_triangle(double** samples, wave_prop_t* wave_prop);
 void create_saw(double** samples, wave_prop_t* wave_prop);
+void create_random(double** samples, wave_prop_t* wave_prop);
 void smooth_signal(double* samples, wave_prop_t* wave_prop);
 char sgn(double* x);
 void fwrite_data(FILE * file, void* sampled_data, wave_prop_t* wave_prop);
@@ -207,6 +208,7 @@ void encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wav
 void encode_ieee_float_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void encode_ieee_float_64bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_header_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
+void encode_companding(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 char a_law_compress_old(double* x);
 char a_law_compress (short* x);
 void encode_a_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
