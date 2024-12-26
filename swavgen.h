@@ -161,7 +161,6 @@ typedef struct Wave_Properties {
     char channel_mask_str[70];
     uint8_t raw;
     uint8_t limit;
-    float phase;
     uint8_t approx;
     void (*defv)(wave_prop_t*); // Set default values 
     void (*seth)(wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Set header values 

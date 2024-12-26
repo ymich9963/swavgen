@@ -21,7 +21,6 @@ void set_defaults(wave_prop_t* wave_prop) {
     wave_prop->extensible = 0;
     wave_prop->raw = 0;
     wave_prop->limit = 0;
-    wave_prop->phase= 0;
     wave_prop->approx = 0;
 }
 
@@ -380,7 +379,7 @@ int set_type_encoding(wave_prop_t* wave_prop) {
 void create_sine(double** samples, wave_prop_t* wave_prop) {
     *samples = malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
     for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        (*samples)[n] = wave_prop->a * sin((2 * M_PI * wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) + wave_prop->phase);
+        (*samples)[n] = wave_prop->a * sin((2 * M_PI * wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)));
     }
 }
 
@@ -465,15 +464,15 @@ char sgn(double* x) {
     return sgn;
 }
 
-void fwrite_data(FILE * file, void* sampled_data, wave_prop_t* wave_prop) {
+void fwrite_data(FILE * file, void* encoded_samples, wave_prop_t* wave_prop) {
     if (wave_prop->bytes_per_sample == 3) {
         int val;
         for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-            val = ((int*)sampled_data)[n];
+            val = ((int*)encoded_samples)[n];
             fwrite(&val, 3, 1, file);
         }
     } else {
-        fwrite(sampled_data, wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels, 1, file);
+        fwrite(encoded_samples, wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels, 1, file);
     }
 }
 
@@ -971,7 +970,7 @@ void set_header_extensible(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt
     }
 }
 
-void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+void output_pcm(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
 
     /* Calculating the unused format chunk members to fix the effect of padding */
     size_t unused_fmt_chunk = sizeof(fmt_chunk->cbSize) + sizeof(fmt_chunk->wValidBitsPerSample) + sizeof(fmt_chunk->dwChannelMask) + sizeof(fmt_chunk->SubFormat); 
@@ -983,7 +982,7 @@ void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_ch
     fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
     fwrite(fmt_chunk,  used_fmt_chunk,  1, file);
     fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
-    fwrite_data(file, sampled_data, wave_prop);
+    fwrite_data(file, encoded_samples, wave_prop);
 
     /* Padding added based on if the data chunk size is odd or even */
     if (wave_prop->padding) {
@@ -992,7 +991,7 @@ void output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_ch
     }
 }
 
-void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+void output_non_pcm(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
 
     /* Calculating the unused format chunk members to fix the effect of padding */
     size_t unused_fmt_chunk = sizeof(fmt_chunk->wValidBitsPerSample) + sizeof(fmt_chunk->dwChannelMask) + sizeof(fmt_chunk->SubFormat); 
@@ -1005,7 +1004,7 @@ void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, rif
     fwrite(fmt_chunk,  used_fmt_chunk,  1, file);
     fwrite(fact_chunk, sizeof(fact_chunk_t), 1, file);
     fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
-    fwrite(sampled_data, wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels, 1, file);
+    fwrite(encoded_samples, wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels, 1, file);
 
     /* Padding added based on if the data chunk size is odd or even */
     if (wave_prop->padding) {
@@ -1014,7 +1013,7 @@ void output_non_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, rif
     }
 }
 
-void output_extensible(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+void output_extensible(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
 
     riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels) + wave_prop->padding;
 
@@ -1022,7 +1021,7 @@ void output_extensible(FILE * file, void* sampled_data, wave_prop_t* wave_prop, 
     fwrite(fmt_chunk,  sizeof(fmt_chunk_t),  1, file);
     fwrite(fact_chunk, sizeof(fact_chunk_t), 1, file);
     fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
-    fwrite_data(file, sampled_data, wave_prop);
+    fwrite_data(file, encoded_samples, wave_prop);
 
     /* Padding added based on if the data chunk size is odd or even */
     if (wave_prop->padding) {
@@ -1031,9 +1030,9 @@ void output_extensible(FILE * file, void* sampled_data, wave_prop_t* wave_prop, 
     }
 }
 
-void output_raw(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+void output_raw(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
 
-    fwrite_data(file, sampled_data, wave_prop);
+    fwrite_data(file, encoded_samples, wave_prop);
 
     /* Padding added based on if the data chunk size is odd or even */
     if (wave_prop->padding) {
