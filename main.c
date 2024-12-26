@@ -1,9 +1,7 @@
 #include "swavgen.h"
 
 // TODO: Implement more formats like IMA ADPCM, GSM, etc.
-// TODO: Make other waves i.e. clipped waves, approximated waves.
-// TODO: Add phase shift option and use amplitude.
-// TODO: Add character channel mask.
+// TODO: Add phase shift option.
 // FIX: Popping when playing and stopping the sound files.
 
 int main (int argc, char** argv) {

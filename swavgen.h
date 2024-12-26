@@ -13,7 +13,7 @@
 #define WAVE_FORMAT_EXTENSIBLE  0xFFFE  // Determined by SubFormat
 
 #define MAX_FILE_NAME   100
-#define IVAL_MAX        64 
+#define IVAL_MAX        999999 
 #define IVAL_MIN        0
 #define LVAL_MAX        4294967295 
 #define LVAL_MIN        0
@@ -84,7 +84,7 @@
         return 1; \
         } }) 
 
-#define CHECK_LIMITS_INT(x)     ({ if ((x) >= IVAL_MAX || (x) <= IVAL_MIN) { \
+#define CHECK_LIMITS_INT(x)     ({ if ((x) > IVAL_MAX || (x) < IVAL_MIN) { \
         fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %d and %d.\n", IVAL_MIN, IVAL_MAX); \
         return 1; \
         } }) 
@@ -143,7 +143,7 @@ typedef struct Wave_Properties {
     float duration; // wave duration
     uint32_t f_s; // sampling frequency
     double f; // tone frequency
-    float p;        // period, in ms
+    float T;        // period, in ms
     uint64_t total_number_of_samples;
     float a; // amplitude
     uint64_t size;
@@ -158,8 +158,11 @@ typedef struct Wave_Properties {
     uint8_t padding;
     uint16_t valid_bits;
     uint32_t channel_mask;
+    char channel_mask_str[70];
     uint8_t raw;
     uint8_t limit;
+    float phase;
+    uint8_t approx;
     void (*defv)(wave_prop_t*); // Set default values 
     void (*seth)(wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Set header values 
     void (*wave)(double**, wave_prop_t*); // Wave generation function 
@@ -167,21 +170,21 @@ typedef struct Wave_Properties {
     void (*outp)(FILE*, void*, wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Output function
 }wave_prop_t;
 
-// Used for signed 24-bit PCM
-// typedef struct int24 {
-//     int data:24;
-// }int24_t;
-
 void set_defaults(wave_prop_t* wave_prop);
 int get_options(int* argc, char** argv, wave_prop_t* wave_prop);
 int get_wave_type(char* str, wave_prop_t* wave_prop);
 int get_encoding(char* str, wave_prop_t* wave_prop);
 int get_represenation(char* str, wave_prop_t* wave_prop);
+int get_channel_mask(char* strval, wave_prop_t* wave_prop);
 int set_type_encoding(wave_prop_t* wave_prop);
 void create_sine(double** samples, wave_prop_t* wave_prop);
+void create_sine_approx(double** samples, wave_prop_t* wave_prop);
 void create_square(double** samples, wave_prop_t* wave_prop);
+void create_square_approx(double** samples, wave_prop_t* wave_prop);
 void create_triangle(double** samples, wave_prop_t* wave_prop);
+void create_triangle_approx(double** samples, wave_prop_t* wave_prop);
 void create_saw(double** samples, wave_prop_t* wave_prop);
+void create_saw_approx(double** samples, wave_prop_t* wave_prop);
 void create_random(double** samples, wave_prop_t* wave_prop);
 void check_limit(double* samples, wave_prop_t* wave_prop);
 void smooth_signal(double* samples, wave_prop_t* wave_prop);
