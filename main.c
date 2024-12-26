@@ -1,8 +1,9 @@
 #include "swavgen.h"
 
-// TODO: Implement IMA ADPCM.
-// TODO: Make other waves i.e. clipped waves, approximated waves, random waves.
-// TODO: Add phase shift option.
+// TODO: Implement more formats like IMA ADPCM, GSM, etc.
+// TODO: Make other waves i.e. clipped waves, approximated waves.
+// TODO: Add phase shift option and use amplitude.
+// TODO: Add character channel mask.
 // FIX: Popping when playing and stopping the sound files.
 
 int main (int argc, char** argv) {
@@ -32,6 +33,8 @@ int main (int argc, char** argv) {
     /* Create the wave */
     double* samples = NULL;
     wave_prop.wave(&samples, &wave_prop);
+
+    check_limit(samples, &wave_prop);
 
     /* Encode the samples */
     void* encoded_samples = NULL;

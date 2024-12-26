@@ -20,6 +20,7 @@ void set_defaults(wave_prop_t* wave_prop) {
     wave_prop->channel_mask = 0;
     wave_prop->extensible = 0;
     wave_prop->raw = 0;
+    wave_prop->limit = 0;
 }
 
 int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
@@ -124,6 +125,10 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
         }
         if (!(strcmp("--raw", argv[i]))) {
             wave_prop->raw = 1;
+            continue;
+        }
+        if (!(strcmp("--limit", argv[i]))) {
+            wave_prop->limit = 1;
             continue;
         }
     }
@@ -259,43 +264,58 @@ int set_type_encoding(wave_prop_t* wave_prop) {
 }
 
 void create_sine(double** samples, wave_prop_t* wave_prop) {
-    *samples = (double*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
+    *samples = malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
     for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        ((double*)*samples)[n] = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / (wave_prop->f_s * wave_prop->channels));
+        (*samples)[n] = wave_prop->a * sin(2 * M_PI * wave_prop->f * n / (wave_prop->f_s * wave_prop->channels));
     }
 }
 
 void create_square(double** samples, wave_prop_t* wave_prop) {
     double sample;
-    *samples = (double*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
+    *samples = malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
     for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         sample = sin(2 * M_PI * wave_prop->f * n / (wave_prop->f_s * wave_prop->channels));
-        ((double*)*samples)[n] = wave_prop->a * (double) sgn(&sample);
+        (*samples)[n] = wave_prop->a * (double) sgn(&sample);
     }
 }
 
 void create_triangle(double** samples, wave_prop_t* wave_prop) {
-    *samples = (double*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
+    *samples = malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
     /* Two implementations. Not sure which one is best. */
     for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        ((double*)*samples)[n] = (2 * wave_prop->a / M_PI) * asin(sin(2 * M_PI * wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)));
-        /* ((double*)*samples)[n] = wave_prop->a * (4 * fabs(((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) - (int)(((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) + 0.5f )) - 1); */
+        (*samples)[n] = (2 * wave_prop->a / M_PI) * asin(sin(2 * M_PI * wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)));
+        /* (*samples)[n] = wave_prop->a * (4 * fabs(((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) - (int)(((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) + 0.5f )) - 1); */
     }
 }
 
 void create_saw(double** samples, wave_prop_t* wave_prop) {
-    *samples = (double*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
+    *samples = malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
     /* Two implementations. Not sure which one is best. */
     for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        /* ((double*)*samples)[n] = wave_prop->a * (((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) - (int)((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels))); */
-        ((double*)*samples)[n] = wave_prop->a * (2 * (((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) - (int)(0.5f + ((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)))));
+        /* (*samples)[n] = wave_prop->a * (((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) - (int)((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels))); */
+        (*samples)[n] = wave_prop->a * (2 * (((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)) - (int)(0.5f + ((double)wave_prop->f * n / (wave_prop->f_s * wave_prop->channels)))));
     }
 }
 
 void create_random(double** samples, wave_prop_t* wave_prop) {
-    *samples = (double*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
+    *samples = malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
     for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        ((double*)*samples)[n] = (2 * (double)rand()/RAND_MAX) - 1;
+        (*samples)[n] = (2 * (double)rand()/RAND_MAX) - 1;
+    }
+}
+
+void check_limit(double* samples, wave_prop_t* wave_prop) {
+    if (!wave_prop->limit) {
+        return;
+    }
+
+    for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        if (samples[n] > 1.0f) {
+            samples[n] = 1.0f;
+        }
+        if (samples[n] < -1.0f) {
+            samples[n] = -1.0f;
+        }
     }
 }
 

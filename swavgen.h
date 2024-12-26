@@ -159,6 +159,7 @@ typedef struct Wave_Properties {
     uint16_t valid_bits;
     uint32_t channel_mask;
     uint8_t raw;
+    uint8_t limit;
     void (*defv)(wave_prop_t*); // Set default values 
     void (*seth)(wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Set header values 
     void (*wave)(double**, wave_prop_t*); // Wave generation function 
@@ -182,6 +183,7 @@ void create_square(double** samples, wave_prop_t* wave_prop);
 void create_triangle(double** samples, wave_prop_t* wave_prop);
 void create_saw(double** samples, wave_prop_t* wave_prop);
 void create_random(double** samples, wave_prop_t* wave_prop);
+void check_limit(double* samples, wave_prop_t* wave_prop);
 void smooth_signal(double* samples, wave_prop_t* wave_prop);
 char sgn(double* x);
 void fwrite_data(FILE * file, void* sampled_data, wave_prop_t* wave_prop);
