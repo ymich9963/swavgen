@@ -26,9 +26,9 @@ RESULTS = $(patsubst Test%.c,$(RESULTS_DIR)Test%.txt, $(wildcard *.c))
 COV_FILES = $(wildcard *.gc*)
 
 # If grep doesn't find the output, output a blank line
-PASSED = grep -s :PASS $(RESULTS_DIR)*.txt || echo ""
-FAIL = grep -s :FAIL $(RESULTS_DIR)*.txt || echo ""
-IGNORE = grep -s :IGNORE $(RESULTS_DIR)*.txt || echo ""
+PASSED = grep -s :PASS $(RESULTS_DIR)*.txt -a || echo ""
+FAIL = grep -s :FAIL $(RESULTS_DIR)*.txt -a || echo ""
+IGNORE = grep -s :IGNORE $(RESULTS_DIR)*.txt -a || echo ""
 
 .PHONY: test clean coverage
 test: $(RESULTS)
@@ -54,7 +54,7 @@ $(RESULTS):: $(TEST_EXE)
 	-./$(BUILD_DIR)$< > $@ 2>&1
 	echo "Results piped..."
 
-$(TEST_EXE) :: unity.o twc.o $(TEST_OBJ) 
+$(TEST_EXE) :: unity.o swavgen.o $(TEST_OBJ) 
 	cd build/; \
 		$(CC) -o $@  $(patsubst ../%, ./% ,$^) $(CFLAGS); 
 	echo "Built executable $@ with $^ in $(BUILD_DIR)"
@@ -64,7 +64,7 @@ $(TEST_OBJ):: %.o : %.c
 	mv $@ build/
 	echo "Object $@ in $(TEST_DIR) compiled to $(BUILD_DIR)."
 
-twc.o : $(SRC_DIR)twc.c
+swavgen.o : $(SRC_DIR)swavgen.c
 	$(CC) $< -c $(CFLAGS) 
 	mv $(patsubst ../%, ./% , $@) build/
 	echo "Object $@ in $(SRC_DIR) compiled to $(BUILD_DIR)."

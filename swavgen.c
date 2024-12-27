@@ -31,6 +31,21 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
     int ival;
     char strval[MAX_FILE_NAME];
 
+    if (*argc == 1) {
+        fprintf(stdout, WELCOME_STR);
+        exit(EXIT_SUCCESS);
+    }
+    if (*argc == 2) {
+        if (!(strcmp("--version", argv[1]))) {
+            fprintf(stdout, VERSION_STR);
+            exit(EXIT_SUCCESS);
+        }
+        if (!(strcmp("--help", argv[1]))) {
+            output_help();
+            exit(EXIT_SUCCESS);
+        }
+    }
+
     for (int i = 1; i < *argc; i++) {
         if (argv[i][0] != '-' && argv[i - 1][0] != '-') {
             CHECK_RES(sscanf(argv[i], "%s", strval));
@@ -123,7 +138,7 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
             wave_prop->extensible = 1;
             continue;
         }
-        if (!(strcmp("-v", argv[i])) || !(strcmp("--valid-samples", argv[i]))) {
+        if (!(strcmp("-v", argv[i])) || !(strcmp("--valid-bits", argv[i]))) {
             CHECK_RES(sscanf(argv[i + 1], "%d", &ival));
             CHECK_LIMITS_INT(ival);
             wave_prop->valid_bits = ival;
@@ -284,7 +299,7 @@ int get_channel_mask(char* strval, wave_prop_t* wave_prop) {
         if (!(strcmp("TBR", chp))) {
             mask |= SPEAKER_TOP_BACK_RIGHT;
         }
-        if (!(strcmp("TBR", chp))) {
+        if (!(strcmp("SPR", chp))) {
             mask |= SPEAKER_RESERVED;
         }
         chp = strtok (NULL, ",.-");
@@ -970,7 +985,7 @@ void set_header_extensible(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt
     }
 }
 
-void output_pcm(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+int output_pcm(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
 
     /* Calculating the unused format chunk members to fix the effect of padding */
     size_t unused_fmt_chunk = sizeof(fmt_chunk->cbSize) + sizeof(fmt_chunk->wValidBitsPerSample) + sizeof(fmt_chunk->dwChannelMask) + sizeof(fmt_chunk->SubFormat); 
@@ -989,9 +1004,11 @@ void output_pcm(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff
         uint8_t padding = 0;
         fwrite(&padding, sizeof(padding), 1, file);
     }
+
+    return 0;
 }
 
-void output_non_pcm(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+int output_non_pcm(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
 
     /* Calculating the unused format chunk members to fix the effect of padding */
     size_t unused_fmt_chunk = sizeof(fmt_chunk->wValidBitsPerSample) + sizeof(fmt_chunk->dwChannelMask) + sizeof(fmt_chunk->SubFormat); 
@@ -1011,9 +1028,11 @@ void output_non_pcm(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, 
         uint8_t padding = 0;
         fwrite(&padding, sizeof(padding), 1, file);
     }
+
+    return 0;
 }
 
-void output_extensible(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+int output_extensible(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
 
     riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels) + wave_prop->padding;
 
@@ -1028,9 +1047,11 @@ void output_extensible(FILE * file, void* encoded_samples, wave_prop_t* wave_pro
         uint8_t padding = 0;
         fwrite(&padding, sizeof(padding), 1, file);
     }
+
+    return 0;
 }
 
-void output_raw(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
+int output_raw(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
 
     fwrite_data(file, encoded_samples, wave_prop);
 
@@ -1039,9 +1060,11 @@ void output_raw(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff
         uint8_t padding = 0;
         fwrite(&padding, sizeof(padding), 1, file);
     }
+
+    return 0;
 }
 
-void output_file_details(wave_prop_t* wave_prop) {
+int output_file_details(wave_prop_t* wave_prop) {
     printf("\n\tFile Name:\t%s"
             "\n\tWave Type:\t%s"
             "\n\tSize:\t\t%lld\t[Bytes]"
@@ -1062,6 +1085,54 @@ void output_file_details(wave_prop_t* wave_prop) {
 
     printf("\n\n");
 
+    return 0;
+}
 
+int output_help() {
+    printf("\n\n"
+            "General usage,\n"
+            "'swavgen <Wave Type> [<Options>]', with an ability to choose between 'sine', 'square', 'triangle', 'saw' wave types.\n\n"
+            "Available options are,\n"
+            "\t-e,\t--encoding <Encoding>\t= Encoding used for sampled data. Available encodings are IEEE-float (64/32-bit), PCM (signed/unsigned 8/16/24/32-bit), A/Mu-law.\n"
+            "\t-f,\t--frequency <Frequency [Hz]>\t= Input the wave frequency in Hertz.\n"
+            "\t-T,\t--period <Time [ms]>\t= Input the wave period in milliseconds.\n"
+            "\t-s,\t--sampling-frequency <Frequency [Hz]>\t= Wave sampling frequency in Hertz.\n"
+            "\t-d,\t--duration <Time [s]>\t= Wave duration in seconds.\n"
+            "\t-n,\t--total-samples <Samples>\t= Wave total samples. Gets calculated in the tool with sampling frequency, duaration, and channels. Specifying any of those three options and also specifying the total samples can lead to issues.\n"
+            "\t-a,\t--amplitude <Amplitude>\t= Wave amplitude. Affects the amplitude of the generated wave before encoding, therefore it can have some strange effects in the encodings that expect values of -1 to +1.\n"
+            "\t-l,\t--sample-length <Length [bits]>\t= Encoded wave sample length in bits. Must be divisible by 8.\n"
+            "\t-r,\t--representation <Representation>\t= Choose between 'signed' and 'unsigned' PCM encoding.\n"
+            "\t-c,\t--channels <Channels>\t= Choose the number of channels to be created.\n"
+            "\t-o,\t--output <File Name>\t= Specify the output file name.\n"
+            "\t-x,\t--extensible\t= Enable the extensible format type for WAV. Mandatory when specifying a channel mask or valid bits but otherwise only necessary for some media players.\n"
+            "\t-v,\t--valid-bits <Valid Bits [bits]>\t= Valid bits in the sample. Doesn't seem to do anything and is purely informational. Must be less than the sample length.\n"
+            "\t-m,\t--channel-mask <Channel Mask Code>\t= Specify the channel mask to be used for panning. The number of speaker locations specified should be the same as the number of channels. For example with '-c 2' an option of '-m FR,FL' should be used. All channel mask options are listed below, and should be separated with a comma, dash, or dot.\n"
+            "\t\t--raw\t= Output the data with no header information. Useful for only getting the data of the generated wave.\n"
+            "\t\t--limit\t= Enable limiting so that the generated wave is limited from -1 to +1 prior to encoding.\n"
+            "\t-b,\t--approx <Number of Waves>\t= Specify the using an amount of approximated waves using additive synthesis instead of pure digitally created waves.\n"
+            );
+
+    printf("\n\n\t\t\tCHANNEL MASK CODES\n\n"
+            "\t\tFront Left\t\tFL\n"
+            "\t\tFront Right\t\tFR\n"
+            "\t\tFront Centre\t\tFC\n"
+            "\t\tLow Frequency\t\tLF\n"
+            "\t\tBack Left\t\tBL\n"
+            "\t\tBack Right\t\tBR\n"
+            "\t\tFront Left Of Centre\tFLOC\n"
+            "\t\tFront Right Of Centre\tFROC\n"
+            "\t\tBack Centre\t\tBC\n"
+            "\t\tSide Left\t\tSL\n"
+            "\t\tSide Right\t\tSR\n"
+            "\t\tTop Center\t\tTC\n"
+            "\t\tTop Front Left\t\tTFL\n"
+            "\t\tTop Front Center\tTFC\n"
+            "\t\tTop Front Right\t\tTFR\n"
+            "\t\tTop Back Left\t\tTBL\n"
+            "\t\tTop Back Center\t\tTBC\n"
+            "\t\tTop Back Right\t\tTBR\n"
+            "\t\tSpeaker Reserved\tSPR\n"
+            "\n\nNotes: Experimentally it was found that combinations from FL to SR work with headphones, therefore a max of 11 channels can be used with a channel mask. Also, channel mask does not affect the number of channels, but if using a channel mask of TC and above, the channels covered by the TC< channel masks will not be played, even though the data is there. Swavgen has not been used on other speaker systems so it is unknown if this changes depending on what the generated wave is played.\n\n");
+    return 0;
 }
 

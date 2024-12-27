@@ -1,12 +1,15 @@
 #include "unity/unity.h"
-#include "../swavgen.h"
 #include "unity/unity_internals.h"
-#include <stdio.h>
+#include "../swavgen.h"
 
 void setUp() {}
 
 void tearDown() {
     fflush(stdout);
+}
+
+void test_output_help() {
+   TEST_ASSERT_EQUAL_INT(0, output_help());
 }
 
 void test_output_file_details() {
@@ -26,11 +29,71 @@ void test_output_file_details() {
        .extensible      = 1,
    };
 
-   output_file_details(&wave_prop);
+   TEST_ASSERT_EQUAL_INT(0, output_file_details(&wave_prop));
+}
+
+void test_output_raw() {
+    FILE * file = stdout;
+    char encoded_samples[1] = {1};
+    wave_prop_t wave_prop = {
+        .total_number_of_samples = 1,
+        .channels = 1,
+        .bytes_per_sample = 1,
+        .padding = 1
+    };
+
+    TEST_ASSERT_EQUAL_INT(0, output_raw(file, encoded_samples, &wave_prop, NULL, NULL, NULL, NULL));
+}
+
+void test_output_extensible() {
+    FILE * file = stdout;
+    double encoded_samples[1] = {1};
+    wave_prop_t wave_prop = {
+        .total_number_of_samples = 1,
+        .channels = 1,
+        .bytes_per_sample = 1,
+        .padding = 1
+    };
+    riff_chunk_t riff_chunk = {
+        .waveID = {1},
+        .chunkID = {1},
+        .chunk_size = 1,
+    };
+
+    fmt_chunk_t fmt_chunk = {
+        .chunk_size = 1,
+        .chunkID = {1},
+        .cbSize = 1,
+        .SubFormat = {1},
+        .nChannels = 1,
+        .wFormatTag = 1,
+        .nBlockAlign = 1,
+        .dwChannelMask = 1,
+        .nSamplesPerSec = 1,
+        .wBitsPerSample = 1,
+        .nAvgBytesPerSec = 1,
+        .wValidBitsPerSample = 1,
+    };
+
+    fact_chunk_t fact_chunk = {
+        .chunkID = {1},
+        .chunk_size = 1,
+        .dwSampleLength = 1,
+    };
+
+    data_chunk_t data_chunk = {
+        .chunk_size = 1,
+        .chunkID = {1},
+    };
+
+    TEST_ASSERT_EQUAL_INT(0, output_extensible(file, encoded_samples, &wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk));
 }
 
 int main() {
     UNITY_BEGIN();
+    RUN_TEST(test_output_help);
     RUN_TEST(test_output_file_details);
+    RUN_TEST(test_output_raw);
+    RUN_TEST(test_output_extensible);
     return UNITY_END();
 }
