@@ -479,16 +479,17 @@ char sgn(double* x) {
     return sgn;
 }
 
-void fwrite_data(FILE * file, void* encoded_samples, wave_prop_t* wave_prop) {
+int fwrite_data(FILE * file, void* encoded_samples, wave_prop_t* wave_prop) {
     if (wave_prop->bytes_per_sample == 3) {
         int val;
         for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
             val = ((int*)encoded_samples)[n];
-            fwrite(&val, 3, 1, file);
+            CHECK_WRITE(fwrite(&val, 3, 1, file), 1);
         }
     } else {
-        fwrite(encoded_samples, wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels, 1, file);
+        CHECK_WRITE(fwrite(encoded_samples, wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels, 1, file), 1);
     }
+    return 0;
 }
 
 int8_t convert_double_to_pcm_8bit_signed(double* sample) {
@@ -607,20 +608,18 @@ void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
                     encode_pcm_unsigned_8bit(samples, encoded_samples, wave_prop);
                     break;
                 case 2:
-                    fprintf(stderr, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:", wave_prop->bytes_per_sample);
                     encode_pcm_unsigned_16bit(samples, encoded_samples, wave_prop);
                     break;
                 case 3:
-                    fprintf(stderr, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:", wave_prop->bytes_per_sample);
                     encode_pcm_unsigned_24bit(samples, encoded_samples, wave_prop);
                     break;
                 case 4:
-                    fprintf(stderr, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:", wave_prop->bytes_per_sample);
                     encode_pcm_unsigned_32bit(samples, encoded_samples, wave_prop);
                     break;
                 default:
                     fprintf(stderr, "\nSample bits must be 8, 16, 24, or 32 for PCM. Please specify with '-l' or '--sample-length'.\n");
                     break;
+                fprintf(stdout, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:", wave_prop->bytes_per_sample);
             }
             break;
         default:
@@ -777,25 +776,6 @@ void set_header_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chun
     }
 }
 
-/* Based on the Wikipedia equation. Does not work! Left in to show attempt. Issue with x = 0. */
-char a_law_compress_old(double* x) {
-    double resd = 0.0f;
-    char resc = 0;
-    char sgn = (*x >= 0) ? 1 : -1;
-    if (fabs(*x) < (1/A)) {
-        resd = sgn * ((A * fabs(*x)) / (1 + log(A)));
-    } else if ((fabs(*x) >= (1/A)) && (fabs(*x) <= 1)) {
-        resd = sgn * ((1 + log(A * fabs(*x))) / (1 + log(A)));
-    }
-    if (resd >= 0) {
-        resc =  (S8BIT_MAX * resd);
-    } else {
-        resc = -(S8BIT_MIN * resd);
-    }
-    /* resc = resc ^ (0x55);  #<{(| toggle even bits? not in wikipedia equation |)}># */
-    return resc;
-}
-
 /* Read license in the ITU-T code and attribute accordingly. Mention that the code was changed (also change it more) and is based on that. */
 char a_law_compress(short* x) {
     short ix, exp;
@@ -865,22 +845,6 @@ void set_header_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chu
     }
 }
 
-/* Based on the Wikipedia equation. Does not work! Sometimes values agree. */
-char mu_law_compress_old(double* x) {
-    double resd = 0.0f;
-    char resc = 0;
-    char sgn = (*x >= 0) ? 1 : -1;
-
-    resd = sgn * (log(1 + MU * fabs(*x)))/(log(1 + MU));
-
-    if (resd >= 0) {
-        resc =  (S8BIT_MAX * resd);
-    } else {
-        resc = -(S8BIT_MIN * resd);
-    }
-    return resc;
-}
-
 /* Read license in the ITU-T code and attribute accordingly. Mention that the code was changed (also change it more) and is based on that. */
 char mu_law_compress(short *x) {
     short segment;                  /* segment (Table 2/G711, column 1) */
@@ -944,7 +908,7 @@ void encode_companding(double* samples, void** encoded_samples, wave_prop_t* wav
     }
 
     if (wave_prop->bytes_per_sample != 1) {
-        fprintf(stderr, "\nProgram defaulted to 8 sample bits. No other option available for A-law/Mu-law.\n");
+        fprintf(stdout, "\nProgram defaulted to 8 sample bits. No other option available for A-law/Mu-law.\n");
         wave_prop->bytes_per_sample = 1;
     }
 }
@@ -994,15 +958,15 @@ int output_pcm(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_
 
     riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + used_fmt_chunk + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels) + wave_prop->padding;
 
-    fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
-    fwrite(fmt_chunk,  used_fmt_chunk,  1, file);
-    fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
-    fwrite_data(file, encoded_samples, wave_prop);
+    CHECK_WRITE(fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file), 1);
+    CHECK_WRITE(fwrite(fmt_chunk,  used_fmt_chunk,  1, file), 1);
+    CHECK_WRITE(fwrite(data_chunk, sizeof(data_chunk_t), 1, file), 1);
+    CHECK_RET(fwrite_data(file, encoded_samples, wave_prop));
 
     /* Padding added based on if the data chunk size is odd or even */
     if (wave_prop->padding) {
         uint8_t padding = 0;
-        fwrite(&padding, sizeof(padding), 1, file);
+        CHECK_WRITE(fwrite(&padding, sizeof(padding), 1, file), 1);
     }
 
     return 0;
@@ -1017,16 +981,16 @@ int output_non_pcm(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, r
 
     riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + used_fmt_chunk + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels) + wave_prop->padding;
 
-    fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
-    fwrite(fmt_chunk,  used_fmt_chunk,  1, file);
-    fwrite(fact_chunk, sizeof(fact_chunk_t), 1, file);
-    fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
-    fwrite(encoded_samples, wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels, 1, file);
+    CHECK_WRITE(fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file), 1);
+    CHECK_WRITE(fwrite(fmt_chunk,  used_fmt_chunk,  1, file), 1);
+    CHECK_WRITE(fwrite(fact_chunk, sizeof(fact_chunk_t), 1, file), 1);
+    CHECK_WRITE(fwrite(data_chunk, sizeof(data_chunk_t), 1, file), 1);
+    CHECK_WRITE(fwrite(encoded_samples, wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels, 1, file), 1);
 
     /* Padding added based on if the data chunk size is odd or even */
     if (wave_prop->padding) {
         uint8_t padding = 0;
-        fwrite(&padding, sizeof(padding), 1, file);
+        CHECK_WRITE(fwrite(&padding, sizeof(padding), 1, file), 1);
     }
 
     return 0;
@@ -1036,16 +1000,16 @@ int output_extensible(FILE * file, void* encoded_samples, wave_prop_t* wave_prop
 
     riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels) + wave_prop->padding;
 
-    fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file);
-    fwrite(fmt_chunk,  sizeof(fmt_chunk_t),  1, file);
-    fwrite(fact_chunk, sizeof(fact_chunk_t), 1, file);
-    fwrite(data_chunk, sizeof(data_chunk_t), 1, file);
-    fwrite_data(file, encoded_samples, wave_prop);
+    CHECK_WRITE(fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file), 1);
+    CHECK_WRITE(fwrite(fmt_chunk,  sizeof(fmt_chunk_t),  1, file), 1);
+    CHECK_WRITE(fwrite(fact_chunk, sizeof(fact_chunk_t), 1, file), 1);
+    CHECK_WRITE(fwrite(data_chunk, sizeof(data_chunk_t), 1, file), 1);
+    CHECK_RET(fwrite_data(file, encoded_samples, wave_prop));
 
     /* Padding added based on if the data chunk size is odd or even */
     if (wave_prop->padding) {
         uint8_t padding = 0;
-        fwrite(&padding, sizeof(padding), 1, file);
+        CHECK_WRITE(fwrite(&padding, sizeof(padding), 1, file), 1);
     }
 
     return 0;
@@ -1053,12 +1017,12 @@ int output_extensible(FILE * file, void* encoded_samples, wave_prop_t* wave_prop
 
 int output_raw(FILE * file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk) {
 
-    fwrite_data(file, encoded_samples, wave_prop);
+    CHECK_RET(fwrite_data(file, encoded_samples, wave_prop));
 
     /* Padding added based on if the data chunk size is odd or even */
     if (wave_prop->padding) {
         uint8_t padding = 0;
-        fwrite(&padding, sizeof(padding), 1, file);
+        CHECK_WRITE(fwrite(&padding, sizeof(padding), 1, file), 1);
     }
 
     return 0;

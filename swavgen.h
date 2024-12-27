@@ -102,6 +102,11 @@
         return 1; \
         } }) 
 
+/* Check if write was succesful by comparing the expected and actual writes */
+#define CHECK_WRITE(x, y)        ({ if ((x != y)) { \
+        return 1; \
+        } }) 
+
 /* data Chunk */
 // FIX: Fit sampled_data into the struct.
 typedef struct Data_Chunk {
@@ -191,7 +196,7 @@ void create_random(double** samples, wave_prop_t* wave_prop);
 void check_limit(double* samples, wave_prop_t* wave_prop);
 void smooth_signal(double* samples, wave_prop_t* wave_prop);
 char sgn(double* x);
-void fwrite_data(FILE * file, void* sampled_data, wave_prop_t* wave_prop);
+int fwrite_data(FILE * file, void* sampled_data, wave_prop_t* wave_prop);
 int8_t convert_double_to_pcm_8bit_signed(double* sample);
 int16_t convert_double_to_pcm_16bit_signed(double* sample);
 int32_t convert_double_to_pcm_24bit_signed(double* sample);
@@ -216,11 +221,9 @@ void encode_ieee_float_32bit(double* samples, void** encoded_samples, wave_prop_
 void encode_ieee_float_64bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_header_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
 void encode_companding(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
-char a_law_compress_old(double* x);
 char a_law_compress (short* x);
 void encode_a_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_header_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
-char mu_law_compress_old(double* x);
 char mu_law_compress (short* x);
 void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_header_extensible(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);

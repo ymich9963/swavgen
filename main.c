@@ -3,6 +3,7 @@
 // TODO: Implement more formats like IMA ADPCM, GSM, etc.
 // TODO: Add phase shift option.
 // TODO: Add tool details to generated file.
+// TODO: Make some conversion functions available.
 // FIX: Popping when playing and stopping the sound files.
 
 int main (int argc, char** argv) {
@@ -40,7 +41,7 @@ int main (int argc, char** argv) {
     wave_prop.encd(samples, &encoded_samples, &wave_prop);
 
     /* Output the chunks */
-    wave_prop.outp(file, encoded_samples, &wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
+    CHECK_ERR(wave_prop.outp(file, encoded_samples, &wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk));
 
     /* Final file size */
     wave_prop.size = riff_chunk.chunk_size + sizeof(riff_chunk.chunkID);
