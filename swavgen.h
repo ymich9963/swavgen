@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define WELCOME_STR "swavgen - Simple Wave Generator, Version 1.0.0 \n By Yiannis Michael (ymich9963).\n\nTo generate your first sound file, you must specify the frequency with '-f' or '--frequency'. This generates a 1 channel, 2 second, 500 Hz sine wave with IEEE-float 64-bit encoding at 48 kHz. Use the '--help' option for a list of all the settings.\n\n"
-#define VERSION_STR "swavgen - Simple Wave Generator, Version 1.0.0 \n By Yiannis Michael (ymich9963).\n\n"
+#define WELCOME_STR "swavgen : Simple Wave Generator, Version 1.0.0 \n By Yiannis Michael (ymich9963).\n\nTo generate your first sound file, you must specify the frequency with '-f' or '--frequency'. This generates a 1 channel, 2 second, 500 Hz sine wave with IEEE-float 64-bit encoding at 48 kHz. Use the '--help' option for a list of all the settings.\n\n"
+#define VERSION_STR "swavgen : Simple Wave Generator, Version 1.0.0 \n By Yiannis Michael (ymich9963).\n\n"
 
 /* Standard format codes */
 #define WAVE_FORMAT_PCM         0x0001  // PCM

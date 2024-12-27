@@ -1,5 +1,5 @@
-# swavgen: Simple wave.wav File Generator
-A simple tool to generate WAVE (.wav) files containing different wave types and encodings with no external dependencies! Uses a variety of features of the WAVE audio file format. The ideal end of the project is to implement most of the WAVE formats listed in the [IANA WAVE and AVI Codec Registries](https://www.iana.org/assignments/wave-avi-codec-registry/wave-avi-codec-registry.xhtml), as well as fully use the WAVE format.
+# swavgen : Simple Wave Generator
+A simple tool to generate different wave types (sine, square, triangle, and saw) using different encodings and saving them in WAVE (.wav) format with no external dependencies! Uses a variety of features of the WAVE audio file format. The ideal end of the project is to implement most of the WAVE formats listed in the [IANA WAVE and AVI Codec Registries](https://www.iana.org/assignments/wave-avi-codec-registry/wave-avi-codec-registry.xhtml).
 
 It implements a small bunch of basic DSP concepts such as sampling, encoding, and wave generation.
 
