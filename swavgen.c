@@ -1,3 +1,11 @@
+/*
+    swavgen : Simple Wave Generator.
+    Copyright (C) 2024 Yiannis Michael (ymich9963)
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "swavgen.h"
 
 void set_defaults(wave_prop_t* wave_prop) {
@@ -805,11 +813,11 @@ char a_law_compress(short* x) {
 }
 
 void encode_a_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    short pcm_sample;
-    *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(char));
+    int16_t pcm_sample;
+    *encoded_samples = (int8_t*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(int8_t));
     for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
         pcm_sample = convert_double_to_pcm_16bit_signed(&samples[n]);
-        ((char*)*encoded_samples)[n] = a_law_compress(&pcm_sample);
+        ((int8_t*)*encoded_samples)[n] = a_law_compress(&pcm_sample);
     }
 }
 
@@ -846,10 +854,10 @@ void set_header_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chu
 }
 
 /* Read license in the ITU-T code and attribute accordingly. Mention that the code was changed (also change it more) and is based on that. */
-char mu_law_compress(short *x) {
-    short segment;                  /* segment (Table 2/G711, column 1) */
-    short out;
-    short low_nibble, high_nibble;  /* low/high nibble of log companded sample */
+int8_t mu_law_compress(int16_t *x) {
+    int16_t segment;                  /* segment (Table 2/G711, column 1) */
+    int16_t out;
+    int16_t low_nibble, high_nibble;  /* low/high nibble of log companded sample */
 
     /* Change from 14 bit left justified to 14 bit right justified. 
      * Compute absolute value; adjust for easy processing */
@@ -862,7 +870,7 @@ char mu_law_compress(short *x) {
         absval = (0x1FFF);
 
     /* Determination of sample's segment */
-    short temp = absval >> 6;
+    int16_t temp = absval >> 6;
     segment = 1;
     while (temp != 0) {
         segment++;
@@ -887,11 +895,11 @@ char mu_law_compress(short *x) {
 }
 
 void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    short pcm_sample;
-    *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(char));
+    int16_t pcm_sample;
+    *encoded_samples = (int8_t*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(int8_t));
     for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         pcm_sample = convert_double_to_pcm_16bit_signed(&samples[n]);
-        ((char*)*encoded_samples)[n] = mu_law_compress(&pcm_sample);
+        ((int8_t*)*encoded_samples)[n] = mu_law_compress(&pcm_sample);
     }
 }
 

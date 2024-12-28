@@ -1,10 +1,18 @@
+/*
+    swavgen : Simple Wave Generator.
+    Copyright (C) 2024 Yiannis Michael (ymich9963)
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include <stdint.h>
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define WELCOME_STR "swavgen : Simple Wave Generator, Version 1.0.0 \n By Yiannis Michael (ymich9963).\n\nTo generate your first sound file, you must specify the frequency with '-f' or '--frequency'. This generates a 1 channel, 2 second, 500 Hz sine wave with IEEE-float 64-bit encoding at 48 kHz. Use the '--help' option for a list of all the settings.\n\n"
+#define WELCOME_STR "swavgen : Simple Wave Generator, Version 1.0.0 \n By Yiannis Michael (ymich9963).\n\nTo generate your first sound file, you must specify the frequency with '-f' or '--frequency'. This generates a 1 channel, 2 second, 500 Hz sine wave with IEEE-float 64-bit encoding at 48 kHz. Use the '--help' option for a list of all the settings.\n\n" "This program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n"
 #define VERSION_STR "swavgen : Simple Wave Generator, Version 1.0.0 \n By Yiannis Michael (ymich9963).\n\n"
 
 /* Standard format codes */
@@ -224,7 +232,7 @@ void encode_companding(double* samples, void** encoded_samples, wave_prop_t* wav
 char a_law_compress (short* x);
 void encode_a_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_header_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
-char mu_law_compress (short* x);
+int8_t mu_law_compress(int16_t* x);
 void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 void set_header_extensible(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk);
 int output_pcm(FILE * file, void* sampled_data, wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t *fact_chunk, data_chunk_t *data_chunk);
