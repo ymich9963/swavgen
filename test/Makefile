@@ -85,7 +85,7 @@ $(RESULTS_DIR):
 coverage:: $(RESULTS) 
 	echo "Program executed."
 	echo
-	llvm-cov gcov twc.c $(COVFLAGS)
+	llvm-cov gcov swavgen.c $(COVFLAGS)
 	mv *.gc* $(BUILD_DIR)
 	echo "Coverage files moved to $(BUILD_DIR)."
 

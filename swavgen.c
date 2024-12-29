@@ -1,9 +1,9 @@
 /*
-    swavgen : Simple Wave Generator.
-    Copyright (C) 2024 Yiannis Michael (ymich9963)
+swavgen : Simple Wave Generator.
+Copyright (C) 2024 Yiannis Michael (ymich9963)
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "swavgen.h"
@@ -11,16 +11,16 @@
 void set_defaults(wave_prop_t* wave_prop) {
     strcpy(wave_prop->file_name, "wave.wav");
     wave_prop->a = 1.0f;
-    wave_prop->duration = 2.0; // seconds
-    wave_prop->f_s = 48000; // sample rate
-    wave_prop->f = 800.0f; // wave frequency
-    wave_prop->T = 1.0f/(wave_prop->f * 1e-3); // wave period 
+    wave_prop->duration = 2.0;                  // seconds
+    wave_prop->f_s = 48000;                     // sample rate
+    wave_prop->f = 800.0f;                      // wave frequency
+    wave_prop->T = 1.0f/(wave_prop->f * 1e-3);  // wave period 
     wave_prop->channels = 1;
     wave_prop->total_number_of_samples = wave_prop->f_s * wave_prop->duration * wave_prop->channels;
-    wave_prop->bytes_per_sample = 8; // default to 64-bit samples
-    wave_prop->representation = 's'; // default to signed representation
-    wave_prop->type = 's'; // sine wave
-    strcpy(wave_prop->typestr, "sine"); // sine 
+    wave_prop->bytes_per_sample = 8;            // default to 64-bit samples
+    wave_prop->representation = 's';            // default to signed representation
+    wave_prop->type = 's';                      // sine wave
+    strcpy(wave_prop->typestr, "sine");         // sine 
     wave_prop->encoding = WAVE_FORMAT_IEEE_FLOAT; // IEEE float
     strcpy(wave_prop->encodingstr, "IEEE-float"); // IEEE-float
     wave_prop->padding = 0;
@@ -36,7 +36,9 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
     unsigned long lval = 0;
     unsigned long long llval = 0;
     float fval = 0;
+    double lfval = 0;
     int ival;
+    int16_t s16val;
     char strval[MAX_FILE_NAME];
 
     if (*argc == 1) {
@@ -175,6 +177,64 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
             i++;
             continue;
         }
+        if (!(strcmp("--convert-double-to-PCM-8bit-signed", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%lf", &lfval));
+            CHECK_LIMITS_CONV(lfval);
+            printf("\nConverted %lf to %d\n", lfval, convert_double_to_pcm_8bit_signed(&lfval));
+            return 1;
+        }
+        if (!(strcmp("--convert-double-to-PCM-16bit-signed", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%lf", &lfval));
+            CHECK_LIMITS_CONV(lfval);
+            printf("\nConverted %lf to %d\n", lfval, convert_double_to_pcm_16bit_signed(&lfval));
+            return 1;
+        }
+        if (!(strcmp("--convert-double-to-PCM-24bit-signed", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%lf", &lfval));
+            CHECK_LIMITS_CONV(lfval);
+            printf("\nConverted %lf to %d\n", lfval, convert_double_to_pcm_24bit_signed(&lfval));
+            return 1;
+        }
+        if (!(strcmp("--convert-double-to-PCM-32bit-signed", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%lf", &lfval));
+            CHECK_LIMITS_CONV(lfval);
+            printf("\nConverted %lf to %d\n", lfval, convert_double_to_pcm_32bit_signed(&lfval));
+            return 1;
+        }
+        if (!(strcmp("--convert-double-to-PCM-8bit-unsigned", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%lf", &lfval));
+            CHECK_LIMITS_CONV(lfval);
+            printf("\nConverted %lf to %d\n", lfval, convert_double_to_pcm_8bit_unsigned(&lfval));
+            return 1;
+        }
+        if (!(strcmp("--convert-double-to-PCM-16bit-unsigned", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%lf", &lfval));
+            CHECK_LIMITS_CONV(lfval);
+            printf("\nConverted %lf to %d\n", lfval, convert_double_to_pcm_16bit_unsigned(&lfval));
+            return 1;
+        }
+        if (!(strcmp("--convert-double-to-PCM-24bit-unsigned", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%lf", &lfval));
+            CHECK_LIMITS_CONV(lfval);
+            printf("\nConverted %lf to %d\n", lfval, convert_double_to_pcm_24bit_unsigned(&lfval));
+            return 1;
+        }
+        if (!(strcmp("--convert-double-to-PCM-32bit-unsigned", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%lf", &lfval));
+            CHECK_LIMITS_CONV(lfval);
+            printf("\nConverted %lf to %d\n", lfval, convert_double_to_pcm_32bit_unsigned(&lfval));
+            return 1;
+        }
+        if (!(strcmp("--convert-PCM-16bit-signed-to-A-law", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%hd", &s16val));
+            printf("\nConverted %hd to %hhd\n", s16val, convert_pcm_16bit_signed_to_a_law(&s16val));
+            return 1;
+        }
+        if (!(strcmp("--convert-PCM-16bit-signed-to-Mu-law", argv[i]))) {
+            CHECK_RES(sscanf(argv[i + 1], "%hd", &s16val));
+            printf("\nConverted %hd to %hhd\n", s16val, convert_pcm_16bit_signed_to_mu_law(&s16val));
+            return 1;
+        }
         fprintf(stderr, "\nNo such option '%s'. Please check inputs.\n\n", argv[i]);
         return 1;
     }
@@ -224,8 +284,6 @@ int get_encoding(char* str, wave_prop_t* wave_prop) {
         wave_prop->encoding = WAVE_FORMAT_ALAW;
     } else if (!(strcmp("Mu-law", str))) {
         wave_prop->encoding = WAVE_FORMAT_MULAW;
-    } else if (!(strcmp("IMA-ADPCM", str))) {
-        wave_prop->encoding = WAVE_FORMAT_DVI_ADPCM;
     } else {
         printf("\nUnknown encoding. Please enter either, 'PCM', 'IEEE-float', 'A-law', or 'Mu-law'.\n");
         return 1;
@@ -468,30 +526,27 @@ void create_random(double** samples, wave_prop_t* wave_prop) {
 }
 
 void check_limit(double* samples, wave_prop_t* wave_prop) {
-    if (!wave_prop->limit) {
-        return;
-    }
-
-    for (int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        if (samples[n] > 1.0f) {
-            samples[n] = 1.0f;
-        }
-        if (samples[n] < -1.0f) {
-            samples[n] = -1.0f;
+    if (wave_prop->limit) {
+        for (size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+            if (samples[n] > 1.0f) {
+                samples[n] = 1.0f;
+            }
+            if (samples[n] < -1.0f) {
+                samples[n] = -1.0f;
+            }
         }
     }
 }
 
 char sgn(double* x) {
-    char sgn = (*x >= 0) ? 1 : -1;
-    return sgn;
+    return (*x >= 0) ? 1 : -1;
 }
 
 int fwrite_data(FILE * file, void* encoded_samples, wave_prop_t* wave_prop) {
     if (wave_prop->bytes_per_sample == 3) {
-        int val;
-        for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-            val = ((int*)encoded_samples)[n];
+        int32_t val;
+        for(size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+            val = ((int32_t*)encoded_samples)[n];
             CHECK_WRITE(fwrite(&val, 3, 1, file), 1);
         }
     } else {
@@ -520,7 +575,7 @@ int32_t convert_double_to_pcm_24bit_signed(double* sample) {
     if (*sample >= 0) {
         return S24BIT_MAX * *sample;
     } else {
-        return S24BIT_MIN * *sample; // different from the rest due to actual variable type
+        return S24BIT_MIN * *sample; // different from the rest due to actual variable type and not needing to account for overflow
     }
 }
 
@@ -627,68 +682,69 @@ void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
                 default:
                     fprintf(stderr, "\nSample bits must be 8, 16, 24, or 32 for PCM. Please specify with '-l' or '--sample-length'.\n");
                     break;
-                fprintf(stdout, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:", wave_prop->bytes_per_sample);
+                    fprintf(stdout, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:", wave_prop->bytes_per_sample);
             }
             break;
         default:
-            fprintf(stderr, "\nRepresentation not implemented. Please specify either 'signed' or 'unsigned' with '-r' or '--representation'.\n");
+            fprintf(stderr, "\nRepresentation not implemented. Defaulted to signed 16-bit PCM encoding. Please specify either 'signed' or 'unsigned' with '-r' or '--representation'.\n");
+            encode_pcm_signed_16bit(samples, encoded_samples, wave_prop);
             break;
     }
 }
 
 void encode_pcm_signed_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    *encoded_samples = (char*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(char));
-    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        ((char*)*encoded_samples)[n] = convert_double_to_pcm_8bit_signed(&samples[n]);
+    *encoded_samples = (int8_t*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(int8_t));
+    for(size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        ((int8_t*)*encoded_samples)[n] = convert_double_to_pcm_8bit_signed(&samples[n]);
     }
 }
 
 void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    *encoded_samples = (short*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(short));
-    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        ((short*)*encoded_samples)[n] = convert_double_to_pcm_16bit_signed(&samples[n]);
+    *encoded_samples = (int16_t*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(int16_t));
+    for(size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        ((int16_t*)*encoded_samples)[n] = convert_double_to_pcm_16bit_signed(&samples[n]);
     }
 }
 
 void encode_pcm_signed_24bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    *encoded_samples = (int*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(int));
-    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        ((int*)*encoded_samples)[n] = convert_double_to_pcm_24bit_signed(&samples[n]);
+    *encoded_samples = (int32_t*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(int32_t));
+    for(size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        ((int32_t*)*encoded_samples)[n] = convert_double_to_pcm_24bit_signed(&samples[n]);
     }
 }
 
 void encode_pcm_signed_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    *encoded_samples = (int*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(int));
-    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        ((int*)*encoded_samples)[n] = convert_double_to_pcm_32bit_signed(&samples[n]);
+    *encoded_samples = (int32_t*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(int32_t));
+    for(size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        ((int32_t*)*encoded_samples)[n] = convert_double_to_pcm_32bit_signed(&samples[n]);
     }
 }
 
 void encode_pcm_unsigned_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    *encoded_samples = (unsigned char*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(unsigned char));
-    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        ((unsigned char*)*encoded_samples)[n] = convert_double_to_pcm_8bit_unsigned(&samples[n]);
+    *encoded_samples = (uint8_t*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(uint8_t));
+    for(size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        ((uint8_t*)*encoded_samples)[n] = convert_double_to_pcm_8bit_unsigned(&samples[n]);
     }
 }
 
 void encode_pcm_unsigned_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    *encoded_samples = (unsigned short*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(unsigned short));
-    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        ((unsigned short*)*encoded_samples)[n] = convert_double_to_pcm_16bit_unsigned(&samples[n]);
+    *encoded_samples = (uint16_t*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(uint16_t));
+    for(size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        ((uint16_t*)*encoded_samples)[n] = convert_double_to_pcm_16bit_unsigned(&samples[n]);
     }
 }
 
 void encode_pcm_unsigned_24bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    *encoded_samples = (unsigned int*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(unsigned int));
-    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        ((unsigned int*)*encoded_samples)[n] = convert_double_to_pcm_24bit_unsigned(&samples[n]);
+    *encoded_samples = (uint32_t*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(uint32_t));
+    for(size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        ((uint32_t*)*encoded_samples)[n] = convert_double_to_pcm_24bit_unsigned(&samples[n]);
     }
 }
 
 void encode_pcm_unsigned_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
-    *encoded_samples = (unsigned int*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(unsigned int));
-    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
-        ((unsigned int*)*encoded_samples)[n] = convert_double_to_pcm_32bit_unsigned(&samples[n]);
+    *encoded_samples = (uint32_t*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(uint32_t));
+    for(size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+        ((uint32_t*)*encoded_samples)[n] = convert_double_to_pcm_32bit_unsigned(&samples[n]);
     }
 }
 
@@ -740,14 +796,14 @@ void encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wav
 
 void encode_ieee_float_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     *encoded_samples = (float*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(float));
-    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+    for(size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         ((float*)*encoded_samples)[n] = (float)samples[n];
     }
 }
 
 void encode_ieee_float_64bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     *encoded_samples = (double*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(double));
-    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+    for(size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         ((double*)*encoded_samples)[n] = samples[n];
     }
 }
@@ -785,9 +841,9 @@ void set_header_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chun
 }
 
 /* Read license in the ITU-T code and attribute accordingly. Mention that the code was changed (also change it more) and is based on that. */
-char a_law_compress(short* x) {
-    short ix, exp;
-    short out;
+int8_t convert_pcm_16bit_signed_to_a_law(int16_t* x) {
+    int16_t ix, exp;
+    int8_t out;
 
     ix = *x < 0          /* 0 <= ix < 2048 */
         ? (~(*x)) >> 4       /* 1's complement for negative values */
@@ -815,9 +871,9 @@ char a_law_compress(short* x) {
 void encode_a_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     int16_t pcm_sample;
     *encoded_samples = (int8_t*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(int8_t));
-    for(int n = 0; n < wave_prop->total_number_of_samples; n++) {
+    for(size_t n = 0; n < wave_prop->total_number_of_samples; n++) {
         pcm_sample = convert_double_to_pcm_16bit_signed(&samples[n]);
-        ((int8_t*)*encoded_samples)[n] = a_law_compress(&pcm_sample);
+        ((int8_t*)*encoded_samples)[n] = convert_pcm_16bit_signed_to_a_law(&pcm_sample);
     }
 }
 
@@ -854,7 +910,7 @@ void set_header_mu_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chu
 }
 
 /* Read license in the ITU-T code and attribute accordingly. Mention that the code was changed (also change it more) and is based on that. */
-int8_t mu_law_compress(int16_t *x) {
+int8_t convert_pcm_16bit_signed_to_mu_law(int16_t *x) {
     int16_t segment;                  /* segment (Table 2/G711, column 1) */
     int16_t out;
     int16_t low_nibble, high_nibble;  /* low/high nibble of log companded sample */
@@ -897,9 +953,9 @@ int8_t mu_law_compress(int16_t *x) {
 void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     int16_t pcm_sample;
     *encoded_samples = (int8_t*) malloc(wave_prop->total_number_of_samples * wave_prop->channels * sizeof(int8_t));
-    for(int n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
+    for(size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
         pcm_sample = convert_double_to_pcm_16bit_signed(&samples[n]);
-        ((int8_t*)*encoded_samples)[n] = mu_law_compress(&pcm_sample);
+        ((int8_t*)*encoded_samples)[n] = convert_pcm_16bit_signed_to_mu_law(&pcm_sample);
     }
 }
 
@@ -1105,6 +1161,22 @@ int output_help() {
             "\t\tTop Back Right\t\tTBR\n"
             "\t\tSpeaker Reserved\tSPR\n"
             "\n\nNotes: Experimentally it was found that combinations from FL to SR work with headphones, therefore a max of 11 channels can be used with a channel mask. Also, channel mask does not affect the number of channels, but if using a channel mask of TC and above, the channels covered by the TC< channel masks will not be played, even though the data is there. Swavgen has not been used on other speaker systems so it is unknown if this changes depending on what the generated wave is played.\n\n");
+
+    printf("\n\n\t\t\tCONVERSION HELPERS\n\n"
+            "\t\t--convert-double-to-PCM-8bit-signed <Value>\n"
+            "\t\t--convert-double-to-PCM-16bit-signed <Value>\n"
+            "\t\t--convert-double-to-PCM-24bit-signed <Value>\n"
+            "\t\t--convert-double-to-PCM-32bit-signed <Value>\n"
+            "\t\t--convert-double-to-PCM-8bit-unsigned <Value>\n"
+            "\t\t--convert-double-to-PCM-16bit-unsigned <Value>\n"
+            "\t\t--convert-double-to-PCM-24bit-unsigned <Value>\n"
+            "\t\t--convert-double-to-PCM-32bit-unsigned <Value>\n"
+            "\t\nNote: <Value> must be between +1 and -1."
+            "\n\n"
+            "\t\t--convert-PCM-16bit-signed-to-A-law <Value>\n"
+            "\t\t--convert-PCM-16bit-signed-to-Mu-law <Value>\n"
+            "\t\nNote: <Value> must be between %hd and %hd."
+            , S16BIT_MAX, S16BIT_MIN);
     return 0;
 }
 
