@@ -25,6 +25,32 @@ A simple tool to generate different wave types using different encodings and sav
 
 A-law and Mu-law implementations were adapted from, and tested with, the [ITU-T Software Tools Library (STL)](https://github.com/openitu/STL) in [Recommendation ITU-T G.191 "Software tools for speech and audio coding standardization"](http://itu.int/ITU-T/G.191).
 
+## Installing
+Use either the pre-built executable or build your own with (See Building section below), and place it in a directory listed in your PATH environmental variable.
+
+## Usage
+Use `--help` option for a list of all the different parameters that can be changed. An example command for a 2-second 440 Hz square wave in 16-bit signed PCM encoding would be:
+
+```swavgen square -d 2.0 -f 440 -e PCM -l 16 -r signed```
+
+By setting the tool to specific frequencies, musical notes can be generated. Some useful links are listed below for the correct frequencies or periods to use,
+- [UNSW](https://newt.phys.unsw.edu.au/jw/notes.html).
+- [Lutherie Information](https://www.liutaiomottola.com/formulae/freqtab.htm).
+
+## Building
+Simply use the `make` command to build the executable.
+
+## Tests and Coverage
+Running the tests or coverage can be done by running,
+
+```
+make test
+```
+```
+make coverage
+```
+Testing suite used is [Unity](https://github.com/ThrowTheSwitch/Unity) and LLVM-COV for coverage.
+
 ## Why
 Reasons for writing this program were many. Firstly, I couldn't find anything similar that could just be a sine wave generator from the command line. After I accomplished that I realised I could make it generate other wave types as well. Then, due to using the WAVE format, it made sense to try and make use of it as much as possible by using different encodings and formats. Overral, I believe it's an interesting implementation of a variety of DSP concepts, and I hope someone can find this as interesting and/or useful as I did!
 
