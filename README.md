@@ -1,8 +1,8 @@
 # swavgen : Simple Wave Generator
 ![badge](https://badgen.net/badge/Coverage/100/blue) 
-<a href="https://scan.coverity.com/projects/ymich9963-twc">
+<a href="https://scan.coverity.com/projects/ymich9963-swavgen">
   <img alt="Coverity Scan Build Status"
-       src="https://scan.coverity.com/projects/31168/badge.svg"/>
+       src="https://scan.coverity.com/projects/31179/badge.svg"/>
 </a>
 
 A simple tool to generate different wave types using different encodings and saving them in WAVE (.wav) format with no external dependencies! Uses a variety of features of the WAVE audio file format. The ideal end of the project is to implement most of the WAVE formats listed in the [IANA WAVE and AVI Codec Registries](https://www.iana.org/assignments/wave-avi-codec-registry/wave-avi-codec-registry.xhtml). It implements a small bunch of basic DSP concepts such as sampling, encoding, and wave generation.
