@@ -1,0 +1,12 @@
+Native Compiler invocation: c:/msys64/clang64/bin/clang.exe ../main.c -c -I. -Wall -O3
+Working directory: C:\Users\yiannis\proj\swavgen\build
+Comptype: clangcc:llvm
+* Configuring c:\msys64\clang64\bin\clang as a C compiler
+* Configuring c:\msys64\clang64\bin\clang as a C++ compiler
+* Configuring c:\msys64\clang64\bin\clang as a C compiler
+* Configuring c:\msys64\clang64\bin\clang as an Objective-C compiler
+* Configuring c:\msys64\clang64\bin\clang as an Objective-C++ compiler
+* Configuring c:\msys64\clang64\bin\clang++ as a C++ compiler
+* Configuring c:\msys64\clang64\bin\clang++ as a C compiler
+* Configuring c:\msys64\clang64\bin\clang++ as an Objective-C compiler
+* Configuring c:\msys64\clang64\bin\clang++ as an Objective-C++ compiler

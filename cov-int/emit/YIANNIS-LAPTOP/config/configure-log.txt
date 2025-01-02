@@ -1,0 +1,86 @@
+Auto Detect Comptype: clangcc
+Auto detect not previously cached.
+Candidate Comptype: clangcc:android
+Getting compiler identification output with: c:\msys64\clang64\bin\clang.exe --version -O3 C:\Users\yiannis\AppData\Local\Temp\cov-yiannis\28df24dca4932e36e37f322fdd0206e7\cov-yiannis\51386e5c5367b6a937965d4d58b548e2\test.c
+**** BEGIN FILE source file: C:/Users/yiannis/AppData/Local/Temp/cov-yiannis/28df24dca4932e36e37f322fdd0206e7/cov-yiannis/51386e5c5367b6a937965d4d58b548e2/test.c
+int main() {} 
+
+**** END source file ***
+pipe_command: c:\msys64\clang64\bin\clang.exe --version -O3 C:\Users\yiannis\AppData\Local\Temp\cov-yiannis\28df24dca4932e36e37f322fdd0206e7\cov-yiannis\51386e5c5367b6a937965d4d58b548e2\test.c 
+pipe_commands starting: c:\msys64\clang64\bin\clang.exe --version -O3 C:\Users\yiannis\AppData\Local\Temp\cov-yiannis\28df24dca4932e36e37f322fdd0206e7\cov-yiannis\51386e5c5367b6a937965d4d58b548e2\test.c 
+**** BEGIN FILE output: C:/Users/yiannis/AppData/Local/Temp/cov-yiannis/28df24dca4932e36e37f322fdd0206e7/cov-yiannis/51386e5c5367b6a937965d4d58b548e2/test.output
+clang version 18.1.4
+Target: x86_64-w64-windows-gnu
+Thread model: posix
+InstalledDir: c:/msys64/clang64/bin
+
+**** END FILE output ***
+**** BEGIN FILE error: 
+
+**** END FILE error ***
+**** Compiler identification output begin ****
+clang version 18.1.4
+Target: x86_64-w64-windows-gnu
+Thread model: posix
+InstalledDir: c:/msys64/clang64/bin
+
+**** Compiler identification output end ****
+Candidate Comptype: clangcc:apple
+Getting compiler identification output with: c:\msys64\clang64\bin\clang.exe --version -O3 C:\Users\yiannis\AppData\Local\Temp\cov-yiannis\28df24dca4932e36e37f322fdd0206e7\cov-yiannis\51386e5c5367b6a937965d4d58b548e2\test.c
+**** BEGIN FILE source file: C:/Users/yiannis/AppData/Local/Temp/cov-yiannis/28df24dca4932e36e37f322fdd0206e7/cov-yiannis/51386e5c5367b6a937965d4d58b548e2/test.c
+int main() {} 
+
+**** END source file ***
+pipe_command: c:\msys64\clang64\bin\clang.exe --version -O3 C:\Users\yiannis\AppData\Local\Temp\cov-yiannis\28df24dca4932e36e37f322fdd0206e7\cov-yiannis\51386e5c5367b6a937965d4d58b548e2\test.c 
+pipe_commands starting: c:\msys64\clang64\bin\clang.exe --version -O3 C:\Users\yiannis\AppData\Local\Temp\cov-yiannis\28df24dca4932e36e37f322fdd0206e7\cov-yiannis\51386e5c5367b6a937965d4d58b548e2\test.c 
+**** BEGIN FILE output: C:/Users/yiannis/AppData/Local/Temp/cov-yiannis/28df24dca4932e36e37f322fdd0206e7/cov-yiannis/51386e5c5367b6a937965d4d58b548e2/test.output
+clang version 18.1.4
+Target: x86_64-w64-windows-gnu
+Thread model: posix
+InstalledDir: c:/msys64/clang64/bin
+
+**** END FILE output ***
+**** BEGIN FILE error: 
+
+**** END FILE error ***
+**** Compiler identification output begin ****
+clang version 18.1.4
+Target: x86_64-w64-windows-gnu
+Thread model: posix
+InstalledDir: c:/msys64/clang64/bin
+
+**** Compiler identification output end ****
+Candidate Comptype: clangcc:llvm
+Getting compiler identification output with: c:\msys64\clang64\bin\clang.exe --version -O3 C:\Users\yiannis\AppData\Local\Temp\cov-yiannis\28df24dca4932e36e37f322fdd0206e7\cov-yiannis\51386e5c5367b6a937965d4d58b548e2\test.c
+**** BEGIN FILE source file: C:/Users/yiannis/AppData/Local/Temp/cov-yiannis/28df24dca4932e36e37f322fdd0206e7/cov-yiannis/51386e5c5367b6a937965d4d58b548e2/test.c
+int main() {} 
+
+**** END source file ***
+pipe_command: c:\msys64\clang64\bin\clang.exe --version -O3 C:\Users\yiannis\AppData\Local\Temp\cov-yiannis\28df24dca4932e36e37f322fdd0206e7\cov-yiannis\51386e5c5367b6a937965d4d58b548e2\test.c 
+pipe_commands starting: c:\msys64\clang64\bin\clang.exe --version -O3 C:\Users\yiannis\AppData\Local\Temp\cov-yiannis\28df24dca4932e36e37f322fdd0206e7\cov-yiannis\51386e5c5367b6a937965d4d58b548e2\test.c 
+**** BEGIN FILE output: C:/Users/yiannis/AppData/Local/Temp/cov-yiannis/28df24dca4932e36e37f322fdd0206e7/cov-yiannis/51386e5c5367b6a937965d4d58b548e2/test.output
+clang version 18.1.4
+Target: x86_64-w64-windows-gnu
+Thread model: posix
+InstalledDir: c:/msys64/clang64/bin
+
+**** END FILE output ***
+**** BEGIN FILE error: 
+
+**** END FILE error ***
+**** Compiler identification output begin ****
+clang version 18.1.4
+Target: x86_64-w64-windows-gnu
+Thread model: posix
+InstalledDir: c:/msys64/clang64/bin
+
+**** Compiler identification output end ****
+Encountered compiler invocation for first time, configuring it: c:/msys64/clang64/bin/clang -O3
+[STATUS] Using comptype clangcc:llvm, redirected from comptype clangcc
+Added template compiler configuration instance C:/Users/yiannis/proj/swavgen/cov-int/emit/YIANNIS-LAPTOP/config/4bb83538bbd8a6b5a15753b6dcb0a94a/coverity_config.xml
+Auto Detect Comptype: clangcc
+[STATUS] Cached redirect comptype 'clangcc:llvm' found.
+Using cached template compiler configuration instance C:/Users/yiannis/proj/swavgen/cov-int/emit/YIANNIS-LAPTOP/config/4bb83538bbd8a6b5a15753b6dcb0a94a/coverity_config.xml
+Auto Detect Comptype: clangcc
+[STATUS] Cached redirect comptype 'clangcc:llvm' found.
+Using cached template compiler configuration instance C:/Users/yiannis/proj/swavgen/cov-int/emit/YIANNIS-LAPTOP/config/4bb83538bbd8a6b5a15753b6dcb0a94a/coverity_config.xml

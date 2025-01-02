@@ -22,7 +22,7 @@
 #define WAVE_FORMAT_MULAW       0x0007  // 8-bit ITU-T G.711 µ-law
 #define WAVE_FORMAT_EXTENSIBLE  0xFFFE  // Determined by SubFormat
 
-#define MAX_FILE_NAME   100
+#define MAX_STRING      100
 #define IVAL_MAX        999999 
 #define IVAL_MIN        0
 #define LVAL_MAX        4294967295 
@@ -159,7 +159,7 @@ typedef struct RIFF_Chunk {
 typedef struct Wave_Properties wave_prop_t;
 
 typedef struct Wave_Properties {
-    char file_name[MAX_FILE_NAME];
+    char file_name[MAX_STRING];
     float duration;                         // wave duration
     uint32_t f_s;                           // sampling frequency
     double f;                               // tone frequency
@@ -171,14 +171,14 @@ typedef struct Wave_Properties {
     uint8_t bytes_per_sample;
     uint8_t representation;
     char type;
-    char typestr[10];
+    char typestr[MAX_STRING];
     uint16_t encoding;
-    char encodingstr[10];
+    char encodingstr[MAX_STRING];
     uint8_t extensible;
     uint8_t padding;
     uint16_t valid_bits;
     uint32_t channel_mask;
-    char channel_mask_str[70];
+    char channel_mask_str[MAX_STRING];
     uint8_t raw;
     uint8_t limit;
     uint8_t approx;
