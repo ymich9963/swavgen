@@ -43,28 +43,28 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
 
     if (*argc == 1) {
         fprintf(stdout, WELCOME_STR);
-        exit(EXIT_SUCCESS);
+        return 0;
     }
     if (*argc == 2) {
         if (!(strcmp("--version", argv[1]))) {
             fprintf(stdout, VERSION_STR);
-            exit(EXIT_SUCCESS);
+            return 0;
         }
         if (!(strcmp("--help", argv[1]))) {
             output_help();
-            exit(EXIT_SUCCESS);
+            return 0;
         }
     }
 
     for (int i = 1; i < *argc; i++) {
         if (argv[i][0] != '-' && argv[i - 1][0] != '-') {
             CHECK_RES(sscanf(argv[i], "%s", strval));
-            CHECK_ERR(get_wave_type(argv[i], wave_prop));
+            CHECK_RET(get_wave_type(argv[i], wave_prop));
             continue;
         }
         if (!(strcmp("-e", argv[i])) || !(strcmp("--encoding", argv[i]))) {
             CHECK_RES(sscanf(argv[i + 1], "%s", strval));
-            CHECK_ERR(get_encoding(strval, wave_prop));
+            CHECK_RET(get_encoding(strval, wave_prop));
             i++;
             continue;
         }
@@ -246,7 +246,7 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop) {
         fprintf(stderr, "\nValid bits must not be more than the bits per sample.\n\n");
         return 1;
     }
-    if (wave_prop->channel_mask != 0 && wave_prop->extensible != 1) {
+    if (wave_prop->channel_mask != 0 && wave_prop->extensible == 0) {
         fprintf(stderr, "\nIf using channel masks, the extensible format must be enabled with '-x' or '--extensible'.\n\n");
         return 1;
     }
@@ -267,7 +267,7 @@ int get_wave_type(char* str, wave_prop_t* wave_prop) {
     } else if (!(strcmp("random", str))) {
         wave_prop->type = 'r';
     } else {
-        printf("\nUnknown wave type. Please enter either, 'sine', 'square', 'triangle', or 'saw'.\n");
+        fprintf(stderr, "\nUnknown wave type. Please enter either, 'sine', 'square', 'triangle', or 'saw'.\n");
         return 1;
     }
     strcpy(wave_prop->typestr, str);
@@ -308,7 +308,7 @@ int get_represenation(char* str, wave_prop_t* wave_prop) {
 }
 
 int get_channel_mask(char* strval, wave_prop_t* wave_prop) {
-    char* chp = strtok (strval,",.-");
+    char* chp = strtok(strval,",.-");
     uint32_t mask = 0;
     while (chp != NULL) {
         if (!(strcmp("FL", chp))) {
@@ -369,8 +369,8 @@ int get_channel_mask(char* strval, wave_prop_t* wave_prop) {
             mask |= SPEAKER_RESERVED;
         }
         chp = strtok (NULL, ",.-");
-        wave_prop->channel_mask = mask;
     }
+    wave_prop->channel_mask = mask;
     return 0;
 }
 
@@ -642,9 +642,14 @@ void set_header_pcm(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_
     /* Data Chunk */
     strcpy(data_chunk->chunkID, "data");
     data_chunk->chunk_size = wave_prop->bytes_per_sample * wave_prop->channels * wave_prop->total_number_of_samples;
+
+    /* Check if padding is necessary */
+    if (data_chunk->chunk_size % 2 != 0) {
+        wave_prop->padding = 1; 
+    }
 }
 
-void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
+int encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     switch (wave_prop->representation) {
         case 's':
             switch (wave_prop->bytes_per_sample) {
@@ -662,7 +667,7 @@ void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
                     break;
                 default:
                     fprintf(stderr, "\nSample bits must be 8, 16, 24, or 32 for PCM. Please specify with '-l' or '--sample-length'.\n");
-                    break;
+                    return 1;
             }
             break;
         case 'u':
@@ -681,15 +686,15 @@ void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
                     break;
                 default:
                     fprintf(stderr, "\nSample bits must be 8, 16, 24, or 32 for PCM. Please specify with '-l' or '--sample-length'.\n");
-                    break;
-                    fprintf(stdout, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:", wave_prop->bytes_per_sample);
+                    return 1;
             }
+            fprintf(stdout, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:\n", wave_prop->bytes_per_sample);
             break;
         default:
-            fprintf(stderr, "\nRepresentation not implemented. Defaulted to signed 16-bit PCM encoding. Please specify either 'signed' or 'unsigned' with '-r' or '--representation'.\n");
-            encode_pcm_signed_16bit(samples, encoded_samples, wave_prop);
-            break;
+            fprintf(stderr, "\nRepresentation not implemented. Please specify either 'signed' or 'unsigned' with '-r' or '--representation'.\n");
+            return 1;
     }
+    return 0;
 }
 
 void encode_pcm_signed_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
@@ -780,7 +785,7 @@ void set_header_ieee_float(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt
     }
 }
 
-void encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
+int encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     switch (wave_prop->bytes_per_sample) {
         case 4:
             encode_ieee_float_32bit(samples, encoded_samples, wave_prop);
@@ -790,8 +795,9 @@ void encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wav
             break;
         default:
             fprintf(stderr, "\nSample bits must be 32 or 64 for IEEE-float format. Please specify with '-l' or '--sample-length'.\n");
-            break;
+            return 1;
     }
+    return 0;
 }
 
 void encode_ieee_float_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
@@ -959,7 +965,7 @@ void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_pr
     }
 }
 
-void encode_companding(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
+int encode_companding(double* samples, void** encoded_samples, wave_prop_t* wave_prop) {
     switch (wave_prop->encoding) {
         case WAVE_FORMAT_ALAW:
             encode_a_law(samples, encoded_samples, wave_prop);
@@ -968,13 +974,14 @@ void encode_companding(double* samples, void** encoded_samples, wave_prop_t* wav
             encode_mu_law(samples, encoded_samples, wave_prop);
             break;
         default:
-            break;
+            return 1;
     }
 
     if (wave_prop->bytes_per_sample != 1) {
         fprintf(stdout, "\nProgram defaulted to 8 sample bits. No other option available for A-law/Mu-law.\n");
         wave_prop->bytes_per_sample = 1;
     }
+    return 0;
 }
 
 void set_header_extensible(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chunk_t *fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t *data_chunk) {
@@ -1175,7 +1182,7 @@ int output_help() {
             "\n\n"
             "\t\t--convert-PCM-16bit-signed-to-A-law <Value>\n"
             "\t\t--convert-PCM-16bit-signed-to-Mu-law <Value>\n"
-            "\t\nNote: <Value> must be between %hd and %hd."
+            "\t\nNote: <Value> must be between %hd and %hd.\n\n"
             , S16BIT_MAX, S16BIT_MIN);
     return 0;
 }

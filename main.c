@@ -55,7 +55,7 @@ int main (int argc, char** argv) {
 
     /* Encode the samples */
     void* encoded_samples = NULL;
-    wave_prop.encd(samples, &encoded_samples, &wave_prop);
+    CHECK_ERR(wave_prop.encd(samples, &encoded_samples, &wave_prop));
 
     /* Output the chunks */
     CHECK_ERR(wave_prop.outp(file, encoded_samples, &wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk));

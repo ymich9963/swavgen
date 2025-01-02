@@ -20,7 +20,6 @@
 #define WAVE_FORMAT_IEEE_FLOAT  0x0003  // IEEE float
 #define WAVE_FORMAT_ALAW        0x0006  // 8-bit ITU-T G.711 A-law
 #define WAVE_FORMAT_MULAW       0x0007  // 8-bit ITU-T G.711 µ-law
-#define WAVE_FORMAT_DVI_ADPCM   0x0011  // IMA ADPCM
 #define WAVE_FORMAT_EXTENSIBLE  0xFFFE  // Determined by SubFormat
 
 #define MAX_FILE_NAME   100
@@ -186,7 +185,7 @@ typedef struct Wave_Properties {
     void (*defv)(wave_prop_t*);             // Set default values 
     void (*seth)(wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Set header values 
     void (*wave)(double**, wave_prop_t*);   // Wave generation function 
-    void (*encd)(double*, void**, wave_prop_t*); // Encoding function
+    int (*encd)(double*, void**, wave_prop_t*); // Encoding function
     int (*outp)(FILE*, void*, wave_prop_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Output function
 }wave_prop_t;
 
@@ -423,7 +422,7 @@ void set_header_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_
  * @param encoded_samples Encoded samples array. Gets allocated internally.
  * @param wave_prop  Wave properties struct.
  */
-void encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+int encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 
 /**
  * @brief Encode all the samples in the samples array with PCM 8-bit signed encoding and place the result in the encoded samples array.
@@ -515,7 +514,7 @@ void set_header_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt
  * @param encoded_samples Encoded samples array. Gets allocated internally.
  * @param wave_prop  Wave properties struct.
  */
-void encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+int encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 
 /**
  * @brief Encode all the samples in the samples array with IEEE float 32-bit encoding and place the result in the encoded samples array.
@@ -553,7 +552,7 @@ void set_header_a_law(wave_prop_t* wave_prop, riff_chunk_t *riff_chunk, fmt_chun
  * @param encoded_samples Encoded samples array. Gets allocated internally.
  * @param wave_prop  Wave properties struct.
  */
-void encode_companding(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
+int encode_companding(double* samples, void** encoded_samples, wave_prop_t* wave_prop);
 
 /**
  * @brief Convert a 16-bit signed PCM value to an 8-bit A-law value.

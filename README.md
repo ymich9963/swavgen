@@ -15,8 +15,28 @@ A simple tool to generate different wave types using different encodings and sav
     - Convert any 16-bit signed PCM value to A/Mu-law encoding.
 - Change the provided wave types by varying the amplitude or by using limiting (e.g. Generate a square wave from a triangle wave).
 - Panning using channel masks provided by the WAVE format.
+- Generates files up to the max supported WAV format size which is 4.29 GB.
 
 A-law and Mu-law implementations were adapted from, and tested with, the [ITU-T Software Tools Library (STL)](https://github.com/openitu/STL) in [Recommendation ITU-T G.191 "Software tools for speech and audio coding standardization"](http://itu.int/ITU-T/G.191).
 
 ## Why
 Reasons for writing this program were many. Firstly, I couldn't find anything similar that could just be a sine wave generator from the command line. After I accomplished that I realised I could make it generate other wave types as well. Then, due to using the WAVE format, it made sense to try and make use of it as much as possible by using different encodings and formats. Overral, I believe it's an interesting implementation of a variety of DSP concepts, and I hope someone can find this as interesting and/or useful as I did!
+
+## Resources
+Some resources I used to make the project,
+
+- [WAVE File format](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html)
+- [WaveFileGem](https://wavefilegem.com/how_wave_files_work.html)
+- [Multiple channel audio data and WAVE files](https://learn.microsoft.com/en-us/previous-versions/windows/hardware/design/dn653308(v=vs.85))
+- [Creating a sine wave with PCM](http://www.topherlee.com/software/pcm-tut-sine.html)
+- [ITU-T G.191](https://www.itu.int/itu-t/recommendations/rec.aspx?rec=G.191)
+- [ITU-T STL](https://github.com/openitu/STL/tree/dev)
+- [Companding on embedded systems](https://github.com/deftio/companders)
+- [Waveform Coding Techniques](https://www.cisco.com/c/en/us/support/docs/voice/h323/8123-waveform-coding.html)
+- [Mu-Law and A-Law Compression Tutorial](https://web.archive.org/web/20110719132013/http://hazelware.luggle.com/tutorials/mulawcompression.html)
+- [Basic Waveforms](https://thewolfsound.com/sine-saw-square-triangle-pulse-basic-waveforms-in-synthesis/)
+- [Additive Synthesis](https://pytorch.org/audio/stable/tutorials/additive_synthesis_tutorial.html)
+- [Sine Wave](https://en.wikipedia.org/wiki/Sine_wave)
+- [Square Wave](https://en.wikipedia.org/wiki/Square_wave)
+- [Triangle Wave](https://en.wikipedia.org/wiki/Triangle_wave)
+- [Saw Wave](https://en.wikipedia.org/wiki/Sawtooth_wave)
