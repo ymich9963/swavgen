@@ -65,6 +65,8 @@ int main (int argc, char** argv) {
 
     output_file_details(&wave_prop);
 
+    free(samples);
+    free(encoded_samples);
     fclose(file);
     return 0;
 }
