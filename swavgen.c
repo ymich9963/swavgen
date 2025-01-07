@@ -8,7 +8,7 @@
 
 #include "swavgen.h"
 
-void set_defaults(wave_prop_t* wave_prop)
+void set_defaults(wave_prop_t* restrict wave_prop)
 {
 	strcpy(wave_prop->file_name, "wave.wav");
 	wave_prop->a = 1.0f;
@@ -33,7 +33,7 @@ void set_defaults(wave_prop_t* wave_prop)
 	wave_prop->approx = 0;
 }
 
-int get_options(int* argc, char** argv, wave_prop_t* wave_prop)
+int get_options(int* restrict argc, char** restrict argv, wave_prop_t* restrict wave_prop)
 {
 	unsigned long lval = 0;
 	unsigned long long llval = 0;
@@ -306,7 +306,7 @@ int get_options(int* argc, char** argv, wave_prop_t* wave_prop)
 	return 0;
 }
 
-int get_wave_type(char* str, wave_prop_t* wave_prop)
+int get_wave_type(char* restrict str, wave_prop_t* restrict wave_prop)
 {
 
 	if (!(strcmp("sine", str))) {
@@ -330,7 +330,7 @@ int get_wave_type(char* str, wave_prop_t* wave_prop)
 	return 0;
 }
 
-int get_encoding(char* str, wave_prop_t* wave_prop)
+int get_encoding(char* restrict str, wave_prop_t* restrict wave_prop)
 {
 
 	if (!(strcmp("PCM", str))) {
@@ -352,7 +352,7 @@ int get_encoding(char* str, wave_prop_t* wave_prop)
 	return 0;
 }
 
-int get_represenation(char* str, wave_prop_t* wave_prop)
+int get_represenation(char* restrict str, wave_prop_t* restrict wave_prop)
 {
 
 	if (!(strcmp("signed", str))) {
@@ -372,7 +372,7 @@ int get_represenation(char* str, wave_prop_t* wave_prop)
 	}
 }
 
-int get_channel_mask(char* strval, wave_prop_t* wave_prop)
+int get_channel_mask(char* restrict strval, wave_prop_t* restrict wave_prop)
 {
 	char* chp = strtok(strval, ",.-");
 	uint32_t mask = 0;
@@ -462,7 +462,7 @@ int get_channel_mask(char* strval, wave_prop_t* wave_prop)
 	return 0;
 }
 
-int set_type_encoding(wave_prop_t* wave_prop)
+int set_type_encoding(wave_prop_t* restrict wave_prop)
 {
 	if (wave_prop->approx == 0) {
 		switch (wave_prop->type) {
@@ -549,7 +549,7 @@ int set_type_encoding(wave_prop_t* wave_prop)
 	return 0;
 }
 
-void create_sine(double** samples, wave_prop_t* wave_prop)
+void create_sine(double** restrict samples, wave_prop_t* restrict wave_prop)
 {
 	*samples = calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(double));
 
@@ -558,7 +558,7 @@ void create_sine(double** samples, wave_prop_t* wave_prop)
 	}
 }
 
-void create_square(double** samples, wave_prop_t* wave_prop)
+void create_square(double** restrict samples, wave_prop_t* restrict wave_prop)
 {
 	double sample;
 	*samples = calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(double));
@@ -569,7 +569,7 @@ void create_square(double** samples, wave_prop_t* wave_prop)
 	}
 }
 
-void create_square_approx(double** samples, wave_prop_t* wave_prop)
+void create_square_approx(double** restrict samples, wave_prop_t* restrict wave_prop)
 {
 	*samples = calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(double));
 
@@ -580,7 +580,7 @@ void create_square_approx(double** samples, wave_prop_t* wave_prop)
 	}
 }
 
-void create_triangle(double** samples, wave_prop_t* wave_prop)
+void create_triangle(double** restrict samples, wave_prop_t* restrict wave_prop)
 {
 	*samples = calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(double));
 
@@ -591,7 +591,7 @@ void create_triangle(double** samples, wave_prop_t* wave_prop)
 	}
 }
 
-void create_triangle_approx(double** samples, wave_prop_t* wave_prop)
+void create_triangle_approx(double** restrict samples, wave_prop_t* restrict wave_prop)
 {
 	*samples = calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(double));
 
@@ -602,7 +602,7 @@ void create_triangle_approx(double** samples, wave_prop_t* wave_prop)
 	}
 }
 
-void create_saw(double** samples, wave_prop_t* wave_prop)
+void create_saw(double** restrict samples, wave_prop_t* restrict wave_prop)
 {
 	*samples = calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(double));
 
@@ -613,7 +613,7 @@ void create_saw(double** samples, wave_prop_t* wave_prop)
 	}
 }
 
-void create_saw_approx(double** samples, wave_prop_t* wave_prop)
+void create_saw_approx(double** restrict samples, wave_prop_t* restrict wave_prop)
 {
 	*samples = calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(double));
 
@@ -625,7 +625,7 @@ void create_saw_approx(double** samples, wave_prop_t* wave_prop)
 	}
 }
 
-void create_random(double** samples, wave_prop_t* wave_prop)
+void create_random(double** restrict samples, wave_prop_t* restrict wave_prop)
 {
 	*samples = calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(double));
 
@@ -634,7 +634,7 @@ void create_random(double** samples, wave_prop_t* wave_prop)
 	}
 }
 
-void check_limit(double* samples, wave_prop_t* wave_prop)
+void check_limit(double* restrict samples, wave_prop_t* restrict wave_prop)
 {
 	if (wave_prop->limit) {
 		for (size_t n = 0; n < wave_prop->total_number_of_samples * wave_prop->channels; n++) {
@@ -649,12 +649,12 @@ void check_limit(double* samples, wave_prop_t* wave_prop)
 	}
 }
 
-char sgn(double* x)
+char sgn(double* restrict x)
 {
 	return (*x >= 0) ? 1 : -1;
 }
 
-int fwrite_data(FILE* file, void* encoded_samples, wave_prop_t* wave_prop)
+int fwrite_data(FILE* restrict file, void* restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	if (wave_prop->bytes_per_sample == 3) {
 		int32_t val;
@@ -670,7 +670,7 @@ int fwrite_data(FILE* file, void* encoded_samples, wave_prop_t* wave_prop)
 	return 0;
 }
 
-int8_t convert_double_to_pcm_8bit_signed(double* sample)
+int8_t convert_double_to_pcm_8bit_signed(double* restrict sample)
 {
 	if (*sample >= 0) {
 		return (S8BIT_MAX * *sample);
@@ -679,7 +679,7 @@ int8_t convert_double_to_pcm_8bit_signed(double* sample)
 	}
 }
 
-int16_t convert_double_to_pcm_16bit_signed(double* sample)
+int16_t convert_double_to_pcm_16bit_signed(double* restrict sample)
 {
 	if (*sample >= 0) {
 		return (S16BIT_MAX * *sample);
@@ -688,7 +688,7 @@ int16_t convert_double_to_pcm_16bit_signed(double* sample)
 	}
 }
 
-int32_t convert_double_to_pcm_24bit_signed(double* sample)
+int32_t convert_double_to_pcm_24bit_signed(double* restrict sample)
 {
 	if (*sample >= 0) {
 		return S24BIT_MAX * *sample;
@@ -697,7 +697,7 @@ int32_t convert_double_to_pcm_24bit_signed(double* sample)
 	}
 }
 
-int32_t convert_double_to_pcm_32bit_signed(double* sample)
+int32_t convert_double_to_pcm_32bit_signed(double* restrict sample)
 {
 	if (*sample >= 0) {
 		return (S32BIT_MAX * *sample);
@@ -706,7 +706,7 @@ int32_t convert_double_to_pcm_32bit_signed(double* sample)
 	}
 }
 
-uint8_t convert_double_to_pcm_8bit_unsigned(double* sample)
+uint8_t convert_double_to_pcm_8bit_unsigned(double* restrict sample)
 {
 	if (*sample >= 0) {
 		return ((U8BIT_MAX - 1) * 0.5 * *sample) + (U8BIT_MAX + 1) * 0.5;
@@ -715,7 +715,7 @@ uint8_t convert_double_to_pcm_8bit_unsigned(double* sample)
 	}
 }
 
-uint16_t convert_double_to_pcm_16bit_unsigned(double* sample)
+uint16_t convert_double_to_pcm_16bit_unsigned(double* restrict sample)
 {
 	if (*sample >= 0) {
 		return ((U16BIT_MAX - 1) * 0.5 * *sample) + (U16BIT_MAX + 1) * 0.5;
@@ -724,7 +724,7 @@ uint16_t convert_double_to_pcm_16bit_unsigned(double* sample)
 	}
 }
 
-uint32_t convert_double_to_pcm_24bit_unsigned(double* sample)
+uint32_t convert_double_to_pcm_24bit_unsigned(double* restrict sample)
 {
 	if (*sample >= 0) {
 		return ((U24BIT_MAX - 1) * 0.5 * *sample) + (U24BIT_MAX + 1) * 0.5;
@@ -734,7 +734,7 @@ uint32_t convert_double_to_pcm_24bit_unsigned(double* sample)
 }
 
 
-uint32_t convert_double_to_pcm_32bit_unsigned(double* sample)
+uint32_t convert_double_to_pcm_32bit_unsigned(double* restrict sample)
 {
 	if (*sample >= 0) {
 		return ((U32BIT_MAX - 1) * 0.5 * *sample) + (U32BIT_MAX + 1) * 0.5;
@@ -743,7 +743,7 @@ uint32_t convert_double_to_pcm_32bit_unsigned(double* sample)
 	}
 }
 
-void set_header_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk)
+void set_header_pcm(wave_prop_t* restrict wave_prop, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
 
 	/* Set as NULL for it to not be unused */
@@ -773,7 +773,7 @@ void set_header_pcm(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_
 	}
 }
 
-int encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+int encode_pcm(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	switch (wave_prop->representation) {
 		case 's':
@@ -830,7 +830,7 @@ int encode_pcm(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
 	return 0;
 }
 
-void encode_pcm_signed_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+void encode_pcm_signed_8bit(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	*encoded_samples = (int8_t*) calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(int8_t));
 
@@ -839,7 +839,7 @@ void encode_pcm_signed_8bit(double* samples, void** encoded_samples, wave_prop_t
 	}
 }
 
-void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+void encode_pcm_signed_16bit(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	*encoded_samples = (int16_t*) calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(int16_t));
 
@@ -848,7 +848,7 @@ void encode_pcm_signed_16bit(double* samples, void** encoded_samples, wave_prop_
 	}
 }
 
-void encode_pcm_signed_24bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+void encode_pcm_signed_24bit(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	*encoded_samples = (int32_t*) calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(int32_t));
 
@@ -857,7 +857,7 @@ void encode_pcm_signed_24bit(double* samples, void** encoded_samples, wave_prop_
 	}
 }
 
-void encode_pcm_signed_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+void encode_pcm_signed_32bit(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	*encoded_samples = (int32_t*) calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(int32_t));
 
@@ -866,7 +866,7 @@ void encode_pcm_signed_32bit(double* samples, void** encoded_samples, wave_prop_
 	}
 }
 
-void encode_pcm_unsigned_8bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+void encode_pcm_unsigned_8bit(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	*encoded_samples = (uint8_t*) calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(uint8_t));
 
@@ -875,7 +875,7 @@ void encode_pcm_unsigned_8bit(double* samples, void** encoded_samples, wave_prop
 	}
 }
 
-void encode_pcm_unsigned_16bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+void encode_pcm_unsigned_16bit(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	*encoded_samples = (uint16_t*) calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(uint16_t));
 
@@ -884,7 +884,7 @@ void encode_pcm_unsigned_16bit(double* samples, void** encoded_samples, wave_pro
 	}
 }
 
-void encode_pcm_unsigned_24bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+void encode_pcm_unsigned_24bit(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	*encoded_samples = (uint32_t*) calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(uint32_t));
 
@@ -893,7 +893,7 @@ void encode_pcm_unsigned_24bit(double* samples, void** encoded_samples, wave_pro
 	}
 }
 
-void encode_pcm_unsigned_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+void encode_pcm_unsigned_32bit(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	*encoded_samples = (uint32_t*) calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(uint32_t));
 
@@ -902,7 +902,7 @@ void encode_pcm_unsigned_32bit(double* samples, void** encoded_samples, wave_pro
 	}
 }
 
-void set_header_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk)
+void set_header_ieee_float(wave_prop_t* restrict wave_prop, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
 
 	/* RIFF Chunk */
@@ -935,7 +935,7 @@ void set_header_ieee_float(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt
 	}
 }
 
-int encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+int encode_ieee_float(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	switch (wave_prop->bytes_per_sample) {
 		case 4:
@@ -953,7 +953,7 @@ int encode_ieee_float(double* samples, void** encoded_samples, wave_prop_t* wave
 	return 0;
 }
 
-void encode_ieee_float_32bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+void encode_ieee_float_32bit(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	*encoded_samples = (float*) calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(float));
 
@@ -962,7 +962,7 @@ void encode_ieee_float_32bit(double* samples, void** encoded_samples, wave_prop_
 	}
 }
 
-void encode_ieee_float_64bit(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+void encode_ieee_float_64bit(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	*encoded_samples = (double*) calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(double));
 
@@ -971,7 +971,7 @@ void encode_ieee_float_64bit(double* samples, void** encoded_samples, wave_prop_
 	}
 }
 
-void set_header_a_law(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk)
+void set_header_a_law(wave_prop_t* restrict wave_prop, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
 
 	/* RIFF Chunk */
@@ -1005,7 +1005,7 @@ void set_header_a_law(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chun
 }
 
 /* Read license in the ITU-T code and attribute accordingly. Mention that the code was changed (also change it more) and is based on that. */
-int8_t convert_pcm_16bit_signed_to_a_law(int16_t* x)
+int8_t convert_pcm_16bit_signed_to_a_law(int16_t* restrict x)
 {
 	int16_t ix, exp;
 	int8_t out;
@@ -1036,7 +1036,7 @@ int8_t convert_pcm_16bit_signed_to_a_law(int16_t* x)
 	return out;
 }
 
-void encode_a_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+void encode_a_law(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	int16_t pcm_sample;
 	*encoded_samples = (int8_t*) calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(int8_t));
@@ -1047,7 +1047,7 @@ void encode_a_law(double* samples, void** encoded_samples, wave_prop_t* wave_pro
 	}
 }
 
-void set_header_mu_law(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk)
+void set_header_mu_law(wave_prop_t* restrict wave_prop, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
 
 	/* RIFF Chunk */
@@ -1081,7 +1081,7 @@ void set_header_mu_law(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chu
 }
 
 /* Read license in the ITU-T code and attribute accordingly. Mention that the code was changed (also change it more) and is based on that. */
-int8_t convert_pcm_16bit_signed_to_mu_law(int16_t* x)
+int8_t convert_pcm_16bit_signed_to_mu_law(int16_t* restrict x)
 {
 	int16_t segment;                  /* segment (Table 2/G711, column 1) */
 	int16_t out;
@@ -1123,7 +1123,7 @@ int8_t convert_pcm_16bit_signed_to_mu_law(int16_t* x)
 	return out;
 }
 
-void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+void encode_mu_law(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	int16_t pcm_sample;
 	*encoded_samples = (int8_t*) calloc(wave_prop->total_number_of_samples * wave_prop->channels, sizeof(int8_t));
@@ -1134,7 +1134,7 @@ void encode_mu_law(double* samples, void** encoded_samples, wave_prop_t* wave_pr
 	}
 }
 
-int encode_companding(double* samples, void** encoded_samples, wave_prop_t* wave_prop)
+int encode_companding(double* restrict samples, void** restrict encoded_samples, wave_prop_t* restrict wave_prop)
 {
 	switch (wave_prop->encoding) {
 		case WAVE_FORMAT_ALAW:
@@ -1155,7 +1155,7 @@ int encode_companding(double* samples, void** encoded_samples, wave_prop_t* wave
 	return 0;
 }
 
-void set_header_extensible(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk)
+void set_header_extensible(wave_prop_t* restrict wave_prop, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
 
 	/* RIFF Chunk */
@@ -1192,7 +1192,7 @@ void set_header_extensible(wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt
 	}
 }
 
-int output_pcm(FILE* file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk)
+int output_pcm(FILE* restrict file, void* restrict encoded_samples, wave_prop_t* restrict wave_prop, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
 
 	/* Calculating the unused format chunk members to fix the effect of padding */
@@ -1216,7 +1216,7 @@ int output_pcm(FILE* file, void* encoded_samples, wave_prop_t* wave_prop, riff_c
 	return 0;
 }
 
-int output_non_pcm(FILE* file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk)
+int output_non_pcm(FILE* restrict file, void* restrict encoded_samples, wave_prop_t* restrict wave_prop, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
 
 	/* Calculating the unused format chunk members to fix the effect of padding */
@@ -1241,7 +1241,7 @@ int output_non_pcm(FILE* file, void* encoded_samples, wave_prop_t* wave_prop, ri
 	return 0;
 }
 
-int output_extensible(FILE* file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk)
+int output_extensible(FILE* restrict file, void* restrict encoded_samples, wave_prop_t* restrict wave_prop, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
 
 	riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*fact_chunk) + sizeof(*data_chunk) + (wave_prop->total_number_of_samples * wave_prop->bytes_per_sample * wave_prop->channels) + wave_prop->padding;
@@ -1261,7 +1261,7 @@ int output_extensible(FILE* file, void* encoded_samples, wave_prop_t* wave_prop,
 	return 0;
 }
 
-int output_raw(FILE* file, void* encoded_samples, wave_prop_t* wave_prop, riff_chunk_t* riff_chunk, fmt_chunk_t* fmt_chunk, fact_chunk_t* fact_chunk, data_chunk_t* data_chunk)
+int output_raw(FILE* restrict file, void* restrict encoded_samples, wave_prop_t* restrict wave_prop, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
 
 	CHECK_RET(fwrite_data(file, encoded_samples, wave_prop));
@@ -1275,7 +1275,7 @@ int output_raw(FILE* file, void* encoded_samples, wave_prop_t* wave_prop, riff_c
 	return 0;
 }
 
-int output_file_details(wave_prop_t* wave_prop)
+int output_file_details(wave_prop_t* restrict wave_prop)
 {
 	printf("\n\tFile Name:\t%s"
 	       "\n\tWave Type:\t%s"
