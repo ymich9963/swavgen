@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "swavgen.h"
 
@@ -23,50 +23,54 @@
 // TODO: Add tool details to generated file.
 // FIX: Popping when playing and stopping the sound files.
 
-int main (int argc, char** argv) {
+int main(int argc, char** argv)
+{
 
-    wave_prop_t wave_prop;
-    riff_chunk_t riff_chunk;
-    fmt_chunk_t fmt_chunk;
-    fact_chunk_t fact_chunk;
-    data_chunk_t data_chunk;
+	wave_prop_t wave_prop;
+	riff_chunk_t riff_chunk;
+	fmt_chunk_t fmt_chunk;
+	fact_chunk_t fact_chunk;
+	data_chunk_t data_chunk;
 
-    set_defaults(&wave_prop);
+	set_defaults(&wave_prop);
 
-    CHECK_ERR(get_options(&argc, argv, &wave_prop));
+	CHECK_ERR(get_options(&argc, argv, &wave_prop));
 
-    FILE * file = fopen(wave_prop.file_name, "wb");
-    if (!(file)) {
-        printf("\nError opening file...exiting.\n");
-        return 1;
-    }
+	FILE* file = fopen(wave_prop.file_name, "wb");
 
-    /* Set the encoding and wave type based on inputs */
-    CHECK_ERR(set_type_encoding(&wave_prop));
+	if (!(file)) {
+		printf("\nError opening file...exiting.\n");
 
-    /* Prepare the chunks based on the encoding */
-    wave_prop.seth(&wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
+		return 1;
+	}
 
-    /* Create the wave */
-    double* samples = NULL;
-    wave_prop.wave(&samples, &wave_prop);
+	/* Set the encoding and wave type based on inputs */
+	CHECK_ERR(set_type_encoding(&wave_prop));
 
-    check_limit(samples, &wave_prop);
+	/* Prepare the chunks based on the encoding */
+	wave_prop.seth(&wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
 
-    /* Encode the samples */
-    void* encoded_samples = NULL;
-    CHECK_ERR(wave_prop.encd(samples, &encoded_samples, &wave_prop));
+	/* Create the wave */
+	double* samples = NULL;
+	wave_prop.wave(&samples, &wave_prop);
 
-    /* Output the chunks */
-    CHECK_ERR(wave_prop.outp(file, encoded_samples, &wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk));
+	check_limit(samples, &wave_prop);
 
-    /* Final file size */
-    wave_prop.size = riff_chunk.chunk_size + sizeof(riff_chunk.chunkID);
+	/* Encode the samples */
+	void* encoded_samples = NULL;
+	CHECK_ERR(wave_prop.encd(samples, &encoded_samples, &wave_prop));
 
-    output_file_details(&wave_prop);
+	/* Output the chunks */
+	CHECK_ERR(wave_prop.outp(file, encoded_samples, &wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk));
 
-    free(samples);
-    free(encoded_samples);
-    fclose(file);
-    return 0;
+	/* Final file size */
+	wave_prop.size = riff_chunk.chunk_size + sizeof(riff_chunk.chunkID);
+
+	output_file_details(&wave_prop);
+
+	free(samples);
+	free(encoded_samples);
+	fclose(file);
+
+	return 0;
 }
