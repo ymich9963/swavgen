@@ -46,20 +46,20 @@ int get_options(int* restrict argc, char** restrict argv, wave_prop_t* restrict 
 	if (*argc == 1) {
 		fprintf(stdout, WELCOME_STR);
 
-		return 0;
+		return 1;
 	}
 
 	if (*argc == 2) {
 		if (!(strcmp("--version", argv[1]))) {
 			fprintf(stdout, VERSION_STR);
 
-			return 0;
+			return 1;
 		}
 
 		if (!(strcmp("--help", argv[1]))) {
 			output_help();
 
-			return 0;
+			return 1;
 		}
 	}
 

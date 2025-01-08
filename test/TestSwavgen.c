@@ -855,15 +855,15 @@ void test_get_options() {
 
     argc = 1;
     argv[0] = "first";
-    TEST_ASSERT_EQUAL_INT(0, get_options(&argc, argv, &wave_prop));
+    TEST_ASSERT_EQUAL_INT(1, get_options(&argc, argv, &wave_prop));
 
     argc = 2;
     argv[1] = "--help";
-    TEST_ASSERT_EQUAL_INT(0, get_options(&argc, argv, &wave_prop));
+    TEST_ASSERT_EQUAL_INT(1, get_options(&argc, argv, &wave_prop));
 
     argc = 2;
     argv[1] = "--version";
-    TEST_ASSERT_EQUAL_INT(0, get_options(&argc, argv, &wave_prop));
+    TEST_ASSERT_EQUAL_INT(1, get_options(&argc, argv, &wave_prop));
 
     char cmd0[] = "first sine -e PCM -f 500 -T 0.02 -s 48000 -d 2.0 -n 96000 -a 1 -l 16 -r signed -c 1 -o out -x -v 16 -m 1 --raw --limit -b 10";
     split(cmd0, argv, &argc);
