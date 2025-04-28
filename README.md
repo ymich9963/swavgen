@@ -8,8 +8,9 @@
 A simple tool to generate different wave types using different encodings and saving them in WAVE (.wav) format with no external dependencies! Uses a variety of features of the WAVE audio file format. The ideal end of the project is to implement most of the WAVE formats listed in the [IANA WAVE and AVI Codec Registries](https://www.iana.org/assignments/wave-avi-codec-registry/wave-avi-codec-registry.xhtml). It implements a small bunch of basic DSP concepts such as sampling, encoding, and wave generation.
 
 ## Features
-- Sine, Square, Triangle, Saw wave outputs.
+- Sine, Square, Triangle, Saw, and Random wave outputs.
     - Digitally created versions and approximated versions using additive synthesis.
+    - Random wave type uses a pseudo-random data generation method.
 - Supported encodings,
     - IEEE float 32/64-bit.
     - PCM signed/unsigned 8/16/24/32-bit.
@@ -32,10 +33,6 @@ Use either the pre-built executable or build your own with (See Building section
 Use `--help` option for a list of all the different parameters that can be changed. An example command for a 2-second 440 Hz square wave in 16-bit signed PCM encoding would be:
 
 ```swavgen square -d 2.0 -f 440 -e PCM -l 16 -r signed```
-
-By setting the tool to specific frequencies, musical notes can be generated. Some useful links are listed below for the correct frequencies or periods to use,
-- [UNSW](https://newt.phys.unsw.edu.au/jw/notes.html).
-- [Lutherie Information](https://www.liutaiomottola.com/formulae/freqtab.htm).
 
 ## Building
 Simply use the `make` command to build the executable.
@@ -72,3 +69,5 @@ Some resources I used to make the project,
 - [Square Wave](https://en.wikipedia.org/wiki/Square_wave)
 - [Triangle Wave](https://en.wikipedia.org/wiki/Triangle_wave)
 - [Saw Wave](https://en.wikipedia.org/wiki/Sawtooth_wave)
+- [UNSW](https://newt.phys.unsw.edu.au/jw/notes.html).
+- [Lutherie Information](https://www.liutaiomottola.com/formulae/freqtab.htm).

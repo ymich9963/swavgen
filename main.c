@@ -19,54 +19,58 @@
 #include "swavgen.h"
 
 // TODO: Implement more formats like IMA ADPCM, GSM, etc.
-// TODO: Add phase shift option.
 // TODO: Add tool details to generated file.
 // FIX: Popping when playing and stopping the sound files.
+//
+// TODO: Add phase shift option.
+// TODO: Add auto naming based on the output details. Also have an option to use the date and time instead. --output-autogen wave or --output-autogen date/time. Default to wave
+// TODO: Add Representation to output details when using PCM
+// TODO: Add Note to output details when using music notes
 
 int main(int argc, char** argv)
 {
-
-	wave_prop_t wave_prop;
+	swavgen_config_t swavgen_config;
 	riff_chunk_t riff_chunk;
 	fmt_chunk_t fmt_chunk;
 	fact_chunk_t fact_chunk;
 	data_chunk_t data_chunk;
 
-	set_defaults(&wave_prop);
+	set_defaults(&swavgen_config);
 
-	CHECK_ERR(get_options(&argc, argv, &wave_prop));
-
-	FILE* file = fopen(wave_prop.file_name, "wb");
-
-	if (!(file)) {
-		printf("\nError opening file...exiting.\n");
-
-		return 1;
-	}
+	CHECK_ERR(get_options(argc, argv, &swavgen_config));
 
 	/* Set the encoding and wave type based on inputs */
-	CHECK_ERR(set_type_encoding(&wave_prop));
+	CHECK_ERR(set_type_encoding(&swavgen_config));
 
 	/* Prepare the chunks based on the encoding */
-	wave_prop.seth(&wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
+	swavgen_config.seth(&swavgen_config, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk);
 
 	/* Create the wave */
 	double* samples = NULL;
-	wave_prop.wave(&samples, &wave_prop);
+	swavgen_config.wave(&samples, &swavgen_config);
 
-	check_limit(samples, &wave_prop);
+	check_limit(samples, &swavgen_config);
 
 	/* Encode the samples */
 	void* encoded_samples = NULL;
-	CHECK_ERR(wave_prop.encd(samples, &encoded_samples, &wave_prop));
+	CHECK_ERR(swavgen_config.encd(samples, &encoded_samples, &swavgen_config));
 
+    /* Generate the output file name */
+    generate_file_name(&swavgen_config);
+
+    FILE* file = fopen(swavgen_config.file_name, "wb");
+    if (!(file)) {
+        printf("\nError opening file...exiting.\n");
+
+        return 1;
+    }
 	/* Output the chunks */
-	CHECK_ERR(wave_prop.outp(file, encoded_samples, &wave_prop, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk));
+	CHECK_ERR(swavgen_config.outp(file, encoded_samples, &swavgen_config, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk));
 
 	/* Final file size */
-	wave_prop.size = riff_chunk.chunk_size + sizeof(riff_chunk.chunkID);
+	swavgen_config.size = riff_chunk.chunk_size + sizeof(riff_chunk.chunkID);
 
-	output_file_details(&wave_prop);
+	output_file_details(&swavgen_config);
 
 	free(samples);
 	free(encoded_samples);
