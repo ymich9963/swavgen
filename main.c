@@ -24,8 +24,6 @@
 //
 // TODO: Add phase shift option.
 // TODO: Add auto naming based on the output details. Also have an option to use the date and time instead. --output-autogen wave or --output-autogen date/time. Default to wave
-// TODO: Add Representation to output details when using PCM
-// TODO: Add Note to output details when using music notes
 
 int main(int argc, char** argv)
 {
@@ -56,7 +54,7 @@ int main(int argc, char** argv)
 	CHECK_ERR(swavgen_config.encd(samples, &encoded_samples, &swavgen_config));
 
     /* Generate the output file name */
-    generate_file_name(&swavgen_config);
+    swavgen_config.fgen(&swavgen_config);
 
     FILE* file = fopen(swavgen_config.file_name, "wb");
     if (!(file)) {

@@ -10,7 +10,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 void set_defaults(swavgen_config_t* restrict swavgen_config)
 {
-
     swavgen_config->a = 1.0f;
     swavgen_config->f = 800.0f;                      // wave frequency
     swavgen_config->f_s = 48000;                     // sample rate
@@ -20,9 +19,11 @@ void set_defaults(swavgen_config_t* restrict swavgen_config)
     swavgen_config->total_number_of_samples = swavgen_config->f_s * swavgen_config->duration * swavgen_config->channels;
 
     swavgen_config->file_name[0] = 0;
-    swavgen_config->file_name_flag = 'p';
+    swavgen_config->fgen = &generate_file_name_properties_format;
 
-    strcpy(swavgen_config->encodingstr, "float"); // float
+    strcpy(swavgen_config->representationstr, "none"); 
+    strcpy(swavgen_config->channel_mask_str, "none"); 
+    strcpy(swavgen_config->encodingstr, "float"); 
     swavgen_config->music_note[0] = 0;
 
     swavgen_config->encoding = WAVE_FORMAT_IEEE_FLOAT; // IEEE float
@@ -175,7 +176,8 @@ int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavg
         }
 
         if (!(strcmp("-o", argv[i])) || !(strcmp("--output", argv[i]))) {
-            strcpy(swavgen_config->file_name, strval);
+            strcpy(swavgen_config->file_name, argv[i + 1]);
+            swavgen_config->fgen = &generate_file_name_ignore;
             i++;
             continue;
         }
@@ -220,7 +222,7 @@ int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavg
         }
 
         if (!(strcmp("--output-name-format", argv[i]))) {
-            set_file_name_flags(argv[i + 1], &swavgen_config->file_name_flag);
+            set_file_name_generator(swavgen_config, argv[i + 1]);
             i++;
             continue;
         }
@@ -863,21 +865,27 @@ int get_music_note_frequency(char music_note[4], double* restrict f)
     return 0;
 }
 
-int set_file_name_flags(char* restrict str, char* restrict flag)
+int set_file_name_generator(swavgen_config_t* restrict swavgen_config, char* restrict str)
 {
-    *flag = '\0';
+    /* Specifying --output always wins */
+    if (swavgen_config->file_name[0] != 0) {
+        return 0;
+    }
+
+    swavgen_config->fgen = NULL;
 
     if (!(strcmp("date/time", str))) {
-        *flag = 'd';
+        swavgen_config->fgen = &generate_file_name_datetime_format;
     } 
     if (!(strcmp("properties", str))) {
-        *flag = 'p';
+        swavgen_config->fgen = &generate_file_name_properties_format;
     } 
-    if (strstr(str, "custom")) {
-        *flag = 'c';
+    if (!(strncmp("custom", str, 6))) {
+        swavgen_config->fgen = &generate_file_name_custom_format;
+        strcpy(swavgen_config->custom_string, str);
     } 
 
-    if (!(*flag)) {
+    if (!(swavgen_config->fgen)) {
         fprintf(stderr, "\nOutput file name format '%s' doesn't exist.\n", str);
         return 1;
     }
@@ -1750,12 +1758,12 @@ char* get_time_string()
     return s;
 }
 
-void generate_file_name_datetime_format(char* restrict fname)
+int generate_file_name_datetime_format(swavgen_config_t* restrict swavgen_config)
 {
-    sprintf(fname, "swavgen-output-%s%s.wav", get_date_string(), get_time_string());
+    return sprintf(swavgen_config->file_name, "swavgen-output-%s%s.wav", get_date_string(), get_time_string());
 }
 
-void generate_file_name_properties_format(char* restrict fname, swavgen_config_t* restrict swavgen_config)
+int generate_file_name_properties_format(swavgen_config_t* restrict swavgen_config)
 {
     const size_t len_a = MAX_TYPE_STRING + 1 + MAX_FREQ_STRING + 1 + MAX_SAMP_STRING + 1 + MAX_REPR_STRING + 1; 
     const size_t len_b = MAX_ENC_STRING + 1 + MAX_BYTE_STRING + 1 + MAX_DURA_STRING + 1 + MAX_CHAN_STRING + 1 + MAX_NOTE_STRING + 1 + MAX_MASK_STRING;
@@ -1793,29 +1801,111 @@ void generate_file_name_properties_format(char* restrict fname, swavgen_config_t
         strcat(prop_string_b, swavgen_config->channel_mask_str);
     }
 
-    sprintf(fname, "swavgen-output-%s%s.wav", prop_string_a, prop_string_b);
+    return sprintf(swavgen_config->file_name, "swavgen-output-%s%s.wav", prop_string_a, prop_string_b);
 }
 
-void generate_file_name(swavgen_config_t* restrict swavgen_config)
+int generate_file_name_custom_format(swavgen_config_t* restrict swavgen_config)
 {
-    if (swavgen_config->file_name[0] != 0) {
-        return;
+    //TODO: Actually set a meaningful size to custom_string
+    char* format_string = strtok(swavgen_config->custom_string, ":");
+    format_string = strtok(NULL, ":");
+
+    if(!(format_string)) {
+        fprintf(stderr, "\nError splitting format string\n");
+        return 1;
+    }
+    
+    memset(swavgen_config->file_name, '\0', sizeof(char) * MAX_STRING);
+    char* format_token = strtok(format_string, "-");
+    char strval[10];
+    uint8_t found = 0;
+
+    while (format_token) {
+        found = 0;
+        if (!(strcmp("swavgen", format_token))) {
+            strcat(swavgen_config->file_name, "swavgen");
+            found = 1;
+        }
+        if (!(strcmp("output", format_token))) {
+            strcat(swavgen_config->file_name, "output");
+            found = 1;
+        }
+        if (!(strcmp("type", format_token))) {
+            strcat(swavgen_config->file_name, swavgen_config->typestr);
+            found = 1;
+        }
+        if (!(strcmp("frequency", format_token))) {
+            sprintf(strval, "%.3lf", swavgen_config->f); 
+            strcat(swavgen_config->file_name, strval);
+            found = 1;
+        }
+        if (!(strcmp("sampling", format_token))) {
+            sprintf(strval, "%u", swavgen_config->f_s); 
+            strcat(swavgen_config->file_name, strval);
+            found = 1;
+        }
+        if (!(strcmp("representation", format_token))) {
+            strcat(swavgen_config->file_name, swavgen_config->representationstr);
+            found = 1;
+        }
+        if (!(strcmp("encoding", format_token))) {
+            strcat(swavgen_config->file_name, swavgen_config->encodingstr);
+            found = 1;
+        }
+        if (!(strcmp("length", format_token))) {
+            sprintf(strval, "%u", swavgen_config->bytes_per_sample * 8); 
+            strcat(swavgen_config->file_name, strval);
+            found = 1;
+        }
+        if (!(strcmp("duration", format_token))) {
+            sprintf(strval, "%.3lf", swavgen_config->f); 
+            strcat(swavgen_config->file_name, strval);
+            found = 1;
+        }
+        if (!(strcmp("channels", format_token))) {
+            sprintf(strval, "%u", swavgen_config->channels); 
+            strcat(swavgen_config->file_name, strval);
+            found = 1;
+        }
+        if (!(strcmp("note", format_token))) {
+            strcat(swavgen_config->file_name, swavgen_config->music_note);
+            found = 1;
+        }
+        if (!(strcmp("mask", format_token))) {
+            strcat(swavgen_config->file_name, swavgen_config->channel_mask_str);
+            found = 1;
+        }
+        if (!(strcmp("date", format_token))) {
+            strcat(swavgen_config->file_name, get_date_string());
+            found = 1;
+        }
+        if (!(strcmp("time", format_token))) {
+            strcat(swavgen_config->file_name, get_time_string());
+            found = 1;
+        }
+
+        if (!found) {
+            fprintf(stderr, "Unkown format specifier '%s'.", format_token);
+            return 1;
+        }
+
+        memset(strval, '\0', sizeof(char) * 10);
+        strcat(swavgen_config->file_name, "-");
+        format_token = strtok(NULL, "-");
     }
 
-    switch (swavgen_config->file_name_flag) {
-        case 'p':
-            generate_file_name_properties_format(swavgen_config->file_name, swavgen_config);
-            break;
-        case 'd':
-            generate_file_name_datetime_format(swavgen_config->file_name);
-            break;
-        case 'c':
-            // generate_file_name_custom_format(swavgen_config->file_name);
-            break;
-        default:
-            fprintf(stderr, "\nShould not reach this state...\n");
-            break;
-    }
+    swavgen_config->file_name[strlen(swavgen_config->file_name) - 1] = '\0';
+    strcat(swavgen_config->file_name, ".wav");
+
+    printf("%s", swavgen_config->file_name);
+
+    return 0;
+}
+
+int generate_file_name_ignore(swavgen_config_t* restrict swavgen_config)
+{
+    /* Do nothing */
+    return 0;
 }
 
 int output_help()
@@ -1841,7 +1931,7 @@ int output_help()
             "\t\t--raw\t\t\t\t\t= Output the data with no header information. Useful for only getting the data of the generated wave.\n"
             "\t\t--limit\t\t\t\t\t= Enable limiting so that the generated wave is limited from -1 to +1 prior to encoding.\n"
             "\t-b,\t--approx <Number of Waves>\t\t= Specify the using an amount of approximated waves using additive synthesis instead of pure digitally created waves.\n"
-            "\t\t--output-name-format <Format> = Specify the format of the output file name. Choose between 'date/time', 'properties', and 'custom'. Defaults to 'properties'. To use the 'custom' output format, check the documentation.\n"
+            "\t\t--output-name-format <Format> = Specify the format of the output file name. Choose between 'date/time', 'properties', and 'custom'. Defaults to 'properties'. To use the 'custom' output format, specify with '--output-name-format custom:<SPECIFIERS>'. Separete any of the following specifiers with '-' to create a custom naming format, 'swavgen', 'output', 'type', 'frequency', 'sampling', 'representation', 'encoding', 'length', 'duration', 'channels', 'note', 'mask', 'date', and 'time'.\n"
             );
 
     printf("\n\n\t\t\tCHANNEL MASK CODES\n\n"

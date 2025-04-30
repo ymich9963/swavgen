@@ -60,8 +60,8 @@
 #define	U16BIT_MIN (uint16_t) 0x0000         //      0 or 0b0000000000000000
 #define	U8BIT_MAX (uint8_t)  0xFF            //  255 or 0b11111111
 #define	U8BIT_MIN (uint8_t)  0x00            //    0 or 0b00000000
-#define	A 87.6
-#define	MU 255
+#define	A   87.6
+#define	MU  255
 
 /* Channel Masks */
 #define	SPEAKER_FRONT_LEFT              0x1
@@ -323,7 +323,6 @@ typedef struct Swavgen_config {
 
     /* Output file */
     char file_name[MAX_STRING];
-    char file_name_flag;
     uint64_t size;
 
     /* Used in WAVE headers */
@@ -338,6 +337,7 @@ typedef struct Swavgen_config {
 	char encodingstr[MAX_ENC_STRING];
 	char channel_mask_str[MAX_MASK_STRING];
 	char music_note[MAX_NOTE_STRING];
+	char custom_string[MAX_STRING];
 
     /* Number of waves used for approximation */ 
     uint8_t approx;
@@ -355,6 +355,7 @@ typedef struct Swavgen_config {
 	void (*seth)(swavgen_config_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Set header values
 	void (*wave)(double**, swavgen_config_t*);       // Swavgen generation function
 	int (*encd)(double*, void**, swavgen_config_t*); // Encoding function
+	int (*fgen)(swavgen_config_t*);                  // File name generator 
 	int (*outp)(FILE*, void*, swavgen_config_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Output function
 } swavgen_config_t;
 
@@ -434,11 +435,11 @@ int set_type_encoding(swavgen_config_t* swavgen_config);
 /**
  * @brief Set the wave type and the encoding type.
  *
+ * @param swavgen_config Swavgen properties struct.
  * @param str String used in argument.
- * @param flag File name flag struct member.
  * @return Success or failure.
  */
-int set_file_name_flags(char* str, char* flag);
+int set_file_name_generator(swavgen_config_t* swavgen_config, char* str);
 
 /**
  * @brief Create a sine wave using the inputted wave properties.
@@ -881,24 +882,34 @@ char* get_time_string();
 /**
  * @brief Generate the date and time string format preset.
  *
- * @param fname File name struct member.
+ * @param swavgen_config Swavgen config struct.
+ * @return Success or failure.
  */
-void generate_file_name_datetime_format(char* fname);
+int generate_file_name_datetime_format(swavgen_config_t* swavgen);
 
 /**
  * @brief Generate the properties string format preset.
  *
- * @param fname File name struct member.
  * @param swavgen_config Swavgen config struct.
+ * @return Success or failure.
  */
-void generate_file_name_properties_format(char* fname, swavgen_config_t* swavgen_config);
+int generate_file_name_properties_format(swavgen_config_t* swavgen_config);
 
 /**
- * @brief Generate the file name based on the selected flag. If the file name has been filled using the corresponding option then exist the function.
+ * @brief Generate a file name using a custom format.
  *
- * @param swavgen_config 
+ * @param swavgen_config Swavgen config struct.
+ * @return Success or failure.
  */
-void generate_file_name(swavgen_config_t* swavgen_config);
+int generate_file_name_custom_format(swavgen_config_t* swavgen_config);
+
+/**
+ * @brief Used to set the function pointer when setting a specific file name.
+ *
+ * @param swavgen_config Swavgen config struct.
+ * @return Success or failure.
+ */
+int generate_file_name_ignore(swavgen_config_t* swavgen_config);
 
 /**
  * @brief Output the help text.
