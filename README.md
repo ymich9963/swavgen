@@ -27,7 +27,19 @@ A simple tool to generate different wave types using different encodings and sav
 A-law and Mu-law implementations were adapted from, and tested with, the [ITU-T Software Tools Library (STL)](https://github.com/openitu/STL) in [Recommendation ITU-T G.191 "Software tools for speech and audio coding standardization"](http://itu.int/ITU-T/G.191).
 
 ## Installing
-Use either the pre-built executable or build your own with (See Building section below), and place it in a directory listed in your PATH environmental variable.
+Currently an automatic installation exists only for Windows, and binaries are built only for Windows. For other Operating Systems you need to build from source.
+
+### Windows
+To install automatically, use the install script located in `install/` by executing the command below in a PowerShell terminal with Admin rights,
+
+```
+irm "https://raw.githubusercontent.com/ymich9963/swavgen/refs/heads/main/install/swavgen-windows-install.ps1" | iex
+```
+
+The script downloads the executable, moves it to `C:\Program Files\swavgen\`, and adds that path to the system environment variable. If you do not want the automated script feel free to download the executable or build from source. In case your organisation doesn't allow you to install from the script due to protected paths, download the script and change the `$Swavgen_install_path` variable to a location that suits you.
+
+### macOS & Linux
+Please the Building section. Use `make` to build from source.
 
 ## Usage
 Use `--help` option for a list of all the different parameters that can be changed. An example command for a 2-second 440 Hz square wave in 16-bit signed PCM encoding would be:

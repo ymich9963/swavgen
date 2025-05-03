@@ -45,6 +45,7 @@ int main(int argc, char** argv)
 	double* samples = NULL;
 	swavgen_config.wave(&samples, &swavgen_config);
 
+    /* Executing limiting if it was selected */
 	check_limit(samples, &swavgen_config);
 
 	/* Encode the samples */
@@ -60,6 +61,7 @@ int main(int argc, char** argv)
 
         return 1;
     }
+
 	/* Output the chunks */
 	CHECK_ERR(swavgen_config.outp(file, encoded_samples, &swavgen_config, &riff_chunk, &fmt_chunk, &fact_chunk, &data_chunk));
 
