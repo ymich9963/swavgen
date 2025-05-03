@@ -319,7 +319,7 @@ typedef struct Swavgen_config {
 	float duration;                         // wave duration
 	float T;                                // period, in ms
     uint8_t channels;
-    uint64_t total_number_of_samples;
+    size_t total_number_of_samples;
 
     /* Output file */
     char file_name[MAX_STRING];
@@ -440,6 +440,13 @@ int set_type_encoding(swavgen_config_t* swavgen_config);
  * @return Success or failure.
  */
 int set_file_name_generator(swavgen_config_t* swavgen_config, char* str);
+
+/**
+ * @brief Get the phase angle from the inputted theta value.
+ *
+ * @param swavgen_config Swavgen properties struct.
+ */
+void get_phase(swavgen_config_t* swavgen_config);
 
 /**
  * @brief Create a sine wave using the inputted wave properties.

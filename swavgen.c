@@ -47,7 +47,7 @@ int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavg
     unsigned long long llval = 0;
     float fval = 0;
     double lfval = 0;
-    int ival;
+    int32_t i32val;
     int16_t s16val;
     char strval[MAX_STRING];
 
@@ -138,16 +138,16 @@ int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavg
         }
 
         if (!(strcmp("-l", argv[i])) || !(strcmp("--sample-length", argv[i]))) {
-            CHECK_RES(sscanf(argv[i + 1], "%d", &ival));
+            CHECK_RES(sscanf(argv[i + 1], "%d", &i32val));
 
-            if (ival % 8) {
+            if (i32val % 8) {
                 fprintf(stderr, "\nPlease enter a sample length value divisble by 8.\n");
 
                 return 1;
             }
 
-            swavgen_config->bytes_per_sample = ival / 8; // variable is called bytes but it's inputted as bits.
-            swavgen_config->valid_bits = ival;
+            swavgen_config->bytes_per_sample = i32val / 8; // variable is called bytes but it's inputted as bits.
+            swavgen_config->valid_bits = i32val;
             i++;
             continue;
         }
@@ -160,17 +160,17 @@ int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavg
         }
 
         if (!(strcmp("-c", argv[i])) || !(strcmp("--channels", argv[i]))) {
-            CHECK_RES(sscanf(argv[i + 1], "%d", &ival));
-            CHECK_LIMITS_INT(ival);
-            swavgen_config->channels = ival;
+            CHECK_RES(sscanf(argv[i + 1], "%d", &i32val));
+            CHECK_LIMITS_INT(i32val);
+            swavgen_config->channels = i32val;
             i++;
             continue;
         }
 
         if (!(strcmp("-m", argv[i])) || !(strcmp("--channels", argv[i]))) {
-            CHECK_RES(sscanf(argv[i + 1], "%d", &ival));
-            CHECK_LIMITS_INT(ival);
-            swavgen_config->channels = ival;
+            CHECK_RES(sscanf(argv[i + 1], "%d", &i32val));
+            CHECK_LIMITS_INT(i32val);
+            swavgen_config->channels = i32val;
             i++;
             continue;
         }
@@ -188,9 +188,9 @@ int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavg
         }
 
         if (!(strcmp("-v", argv[i])) || !(strcmp("--valid-bits", argv[i]))) {
-            CHECK_RES(sscanf(argv[i + 1], "%d", &ival));
-            CHECK_LIMITS_INT(ival);
-            swavgen_config->valid_bits = ival;
+            CHECK_RES(sscanf(argv[i + 1], "%d", &i32val));
+            CHECK_LIMITS_INT(i32val);
+            swavgen_config->valid_bits = i32val;
             i++;
             continue;
         }
@@ -214,9 +214,9 @@ int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavg
         }
 
         if (!(strcmp("-b", argv[i])) || !(strcmp("--approx", argv[i]))) {
-            CHECK_RES(sscanf(argv[i + 1], "%d", &ival));
-            CHECK_LIMITS_INT(ival);
-            swavgen_config->approx = ival;
+            CHECK_RES(sscanf(argv[i + 1], "%d", &i32val));
+            CHECK_LIMITS_INT(i32val);
+            swavgen_config->approx = i32val;
             i++;
             continue;
         }
@@ -1176,7 +1176,6 @@ uint32_t convert_double_to_pcm_32bit_unsigned(double sample)
 
 void set_header_pcm(swavgen_config_t* restrict swavgen_config, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
-
     /* Set as NULL for it to not be unused */
     fact_chunk = (fact_chunk_t*) NULL;
 
@@ -1403,7 +1402,6 @@ void encode_ieee_float_64bit(double* restrict samples, void** restrict encoded_s
 
 void set_header_a_law(swavgen_config_t* restrict swavgen_config, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
-
     /* RIFF Chunk */
     memcpy(riff_chunk->chunkID, "RIFF", 4);
     memcpy(riff_chunk->waveID, "WAVE", 4);
@@ -1585,7 +1583,6 @@ int encode_companding(double* restrict samples, void** restrict encoded_samples,
 
 void set_header_extensible(swavgen_config_t* restrict swavgen_config, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
-
     /* RIFF Chunk */
     memcpy(riff_chunk->chunkID, "RIFF", 4);
     memcpy(riff_chunk->waveID, "WAVE", 4);
@@ -1622,7 +1619,6 @@ void set_header_extensible(swavgen_config_t* restrict swavgen_config, riff_chunk
 
 int output_pcm(FILE* restrict file, void* restrict encoded_samples, swavgen_config_t* restrict swavgen_config, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
-
     /* Calculating the unused format chunk members to fix the effect of padding */
     size_t unused_fmt_chunk = sizeof(fmt_chunk->cbSize) + sizeof(fmt_chunk->wValidBitsPerSample) + sizeof(fmt_chunk->dwChannelMask) + sizeof(fmt_chunk->SubFormat);
 
@@ -1646,7 +1642,6 @@ int output_pcm(FILE* restrict file, void* restrict encoded_samples, swavgen_conf
 
 int output_non_pcm(FILE* restrict file, void* restrict encoded_samples, swavgen_config_t* restrict swavgen_config, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
-
     /* Calculating the unused format chunk members to fix the effect of padding */
     size_t unused_fmt_chunk = sizeof(fmt_chunk->wValidBitsPerSample) + sizeof(fmt_chunk->dwChannelMask) + sizeof(fmt_chunk->SubFormat);
 
@@ -1671,7 +1666,6 @@ int output_non_pcm(FILE* restrict file, void* restrict encoded_samples, swavgen_
 
 int output_extensible(FILE* restrict file, void* restrict encoded_samples, swavgen_config_t* restrict swavgen_config, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
-
     riff_chunk->chunk_size = sizeof(riff_chunk->waveID) + sizeof(*fmt_chunk) + sizeof(*fact_chunk) + sizeof(*data_chunk) + (swavgen_config->total_number_of_samples * swavgen_config->bytes_per_sample * swavgen_config->channels) + swavgen_config->padding;
 
     CHECK_WRITE(fwrite(riff_chunk, sizeof(riff_chunk_t), 1, file), 1);
@@ -1691,7 +1685,6 @@ int output_extensible(FILE* restrict file, void* restrict encoded_samples, swavg
 
 int output_raw(FILE* restrict file, void* restrict encoded_samples, swavgen_config_t* restrict swavgen_config, riff_chunk_t* restrict riff_chunk, fmt_chunk_t* restrict fmt_chunk, fact_chunk_t* restrict fact_chunk, data_chunk_t* restrict data_chunk)
 {
-
     CHECK_RET(fwrite_data(file, encoded_samples, swavgen_config));
 
     /* Padding added based on if the data chunk size is odd or even */

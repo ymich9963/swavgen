@@ -19,11 +19,9 @@
 #include "swavgen.h"
 
 // TODO: Implement more formats like IMA ADPCM, GSM, etc.
-// TODO: Add tool details to generated file.
+// TODO: Add tool details to the generated .wav file.
+// TODO: Add phase shift option. 
 // FIX: Popping when playing and stopping the sound files.
-//
-// TODO: Add phase shift option.
-// TODO: Add auto naming based on the output details. Also have an option to use the date and time instead. --output-autogen wave or --output-autogen date/time. Default to wave
 
 int main(int argc, char** argv)
 {
