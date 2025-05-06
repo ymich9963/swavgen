@@ -8,7 +8,7 @@ if (Test-Path -Path $SWAVGEN_install_path) {
 
 mkdir $SWAVGEN_install_path 
 curl -fsSLO $SWAVGEN_exe_link
-Move-Item twc.exe $SWAVGEN_install_path # mv command
+Move-Item swavgen.exe $SWAVGEN_install_path # mv command
 Write-Output "Downloaded executable." # echo command
 
 $Sys_Env_Path_Value = Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path 
