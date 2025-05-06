@@ -14,7 +14,7 @@
 #include <time.h>
 
 #define	WELCOME_STR "swavgen : Simple Swavgen Generator\nBy Yiannis Michael (ymich9963).\n\nTo generate your first sound file, you must specify the frequency with '-f' or '--frequency'. This generates a 1 channel, 2 second, 440 Hz sine wave with IEEE-float 64-bit encoding at 48 kHz. Use the '--help' option for a list of all the settings.\n\n" "This program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n"
-#define	VERSION_STR "swavgen : Simple Swavgen Generator, Version 1.1.0 \n By Yiannis Michael (ymich9963).\n\n"
+#define	VERSION_STR "swavgen : Version 1.1.0\nBy Yiannis Michael (ymich9963).\n\n"
 
 /* Standard format codes */
 #define	WAVE_FORMAT_PCM 0x0001          // PCM
@@ -26,7 +26,7 @@
 #define	MAX_TYPE_STRING 9 
 #define	MAX_REPR_STRING 9 
 #define	MAX_ENC_STRING  11 
-#define	MAX_MASK_STRING 50 
+#define	MAX_MASK_STRING 70 
 #define	MAX_NOTE_STRING 4
 #define	MAX_FREQ_STRING 10
 #define	MAX_SAMP_STRING 6
@@ -410,10 +410,20 @@ int get_represenation(char* str, char* representationstr, char* representation);
  * @brief Get the channel mask values from the input string.
  *
  * @param strval Input string with channel mask codes.
+ * @param channel_mask_str String containing channel mask input.
  * @param channel_mask Pointer to channel mask swavgen_config_t struct member.
  * @return Success or failure.
  */
-int get_channel_mask(char* strval, uint32_t* channel_mask);
+int get_channel_mask(char* strval, char* channel_mask_str, uint32_t* channel_mask);
+
+/**
+ * @brief Check the length of the input string and set the file name.
+ *
+ * @param file_name File name array.
+ * @param str String input containing file name.
+ * @return Success or failure.
+ */
+int set_file_name(char* file_name, char* str);
 
 /**
  * @brief Get the music note frequency and assign it.

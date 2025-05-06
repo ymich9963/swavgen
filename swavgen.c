@@ -11,10 +11,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 void set_defaults(swavgen_config_t* restrict swavgen_config)
 {
     swavgen_config->a = 1.0f;
-    swavgen_config->f = 800.0f;                      // wave frequency
+    swavgen_config->f = 440.0f;                      // wave frequency
     swavgen_config->f_s = 48000;                     // sample rate
     swavgen_config->duration = 2.0;                  // seconds
-    swavgen_config->T = 1.0f / (swavgen_config->f * 1e-3);  // wave period
+    swavgen_config->T = 1.0f / swavgen_config->f;   // wave period
     swavgen_config->channels = 1;
     swavgen_config->total_number_of_samples = swavgen_config->f_s * swavgen_config->duration * swavgen_config->channels;
 
@@ -23,8 +23,8 @@ void set_defaults(swavgen_config_t* restrict swavgen_config)
 
     strcpy(swavgen_config->representationstr, "none"); 
     strcpy(swavgen_config->channel_mask_str, "none"); 
-    strcpy(swavgen_config->encodingstr, "float"); 
-    swavgen_config->music_note[0] = 0;
+    strcpy(swavgen_config->encodingstr, "IEEE-float"); 
+    strcpy(swavgen_config->music_note, "N0N"); 
 
     swavgen_config->encoding = WAVE_FORMAT_IEEE_FLOAT; // IEEE float
     swavgen_config->bytes_per_sample = 8;            // default to 64-bit samples
@@ -47,9 +47,12 @@ int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavg
     unsigned long long llval = 0;
     float fval = 0;
     double lfval = 0;
-    int32_t i32val;
-    int16_t s16val;
+    int32_t i32val = 0;
+    int16_t s16val = 0;
     char strval[MAX_STRING];
+
+    /* Initialise */
+    memset(strval, '\0', sizeof(char) * MAX_STRING);
 
     if (argc == 1) {
         fprintf(stdout, WELCOME_STR);
@@ -167,8 +170,8 @@ int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavg
             continue;
         }
 
-        if (!(strcmp("-m", argv[i])) || !(strcmp("--channels", argv[i]))) {
-            CHECK_RES(sscanf(argv[i + 1], "%d", &i32val));
+        if (!(strcmp("-m", argv[i])) || !(strcmp("--channel-mask", argv[i]))) {
+            get_channel_mask(argv[i + 1], swavgen_config->channel_mask_str, &swavgen_config->channel_mask);
             CHECK_LIMITS_INT(i32val);
             swavgen_config->channels = i32val;
             i++;
@@ -176,7 +179,7 @@ int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavg
         }
 
         if (!(strcmp("-o", argv[i])) || !(strcmp("--output", argv[i]))) {
-            strcpy(swavgen_config->file_name, argv[i + 1]);
+            CHECK_ERR(set_file_name(swavgen_config->file_name, argv[i + 1]));
             swavgen_config->fgen = &generate_file_name_ignore;
             i++;
             continue;
@@ -330,6 +333,8 @@ int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavg
 
 int get_wave_type(char* restrict str, char* restrict typestr, char* type)
 {
+    *type = '\0';
+
     if (!(strcmp("sine", str))) {
         *type = 's';
     }
@@ -352,28 +357,39 @@ int get_wave_type(char* restrict str, char* restrict typestr, char* type)
         return 1;
     }
 
-    strcpy(typestr, str);
+    if (strlen(str) < MAX_TYPE_STRING) {
+        strcpy(typestr, str);
+    }
 
     return 0;
 }
 
 int get_encoding(char* restrict str, char* restrict encodingstr, uint16_t* restrict encoding)
 {
+    *encoding = 0;
+
     if (!(strcmp("PCM", str))) {
         *encoding = WAVE_FORMAT_PCM;
-    } else if (!(strcmp("float", str))) {
+    } 
+    if (!(strcmp("IEEE-float", str))) {
         *encoding = WAVE_FORMAT_IEEE_FLOAT;
-    } else if (!(strcmp("A-law", str))) {
+    }
+    if (!(strcmp("A-law", str))) {
         *encoding = WAVE_FORMAT_ALAW;
-    } else if (!(strcmp("Mu-law", str))) {
+    }
+    if (!(strcmp("Mu-law", str))) {
         *encoding = WAVE_FORMAT_MULAW;
-    } else {
-        printf("\nUnknown encoding. Please enter either, 'PCM', 'float', 'A-law', or 'Mu-law'.\n");
+    } 
+
+    if (!(*encoding)) {
+        printf("\nUnknown encoding. Please enter either, 'PCM', 'IEEE-float', 'A-law', or 'Mu-law'.\n");
 
         return 1;
     }
 
-    strcpy(encodingstr, str);
+    if (strlen(str) < MAX_ENC_STRING) {
+        strcpy(encodingstr, str);
+    }
 
     return 0;
 }
@@ -398,102 +414,120 @@ int get_represenation(char* restrict str, char* restrict representationstr, char
         return 1;
     }
 
-    strcpy(representationstr, str);
+    if (strlen(str) < MAX_REPR_STRING) {
+        strcpy(representationstr, str);
+    }
 
     return 0;
 }
 
-int get_channel_mask(char* restrict strval, uint32_t* channel_mask)
+int get_channel_mask(char* restrict str, char* restrict channel_mask_str, uint32_t* restrict channel_mask)
 {
-    char* chp = strtok(strval, ",.-");
+    char* channel_mask_token = strtok(str, ",.-");
     uint32_t mask = 0;
 
-    while (chp != NULL) {
-        if (!(strcmp("FL", chp))) {
+    while (channel_mask_token != NULL) {
+        if (!(strcmp("FL", channel_mask_token))) {
             mask |= SPEAKER_FRONT_LEFT;
         }
 
-        if (!(strcmp("FR", chp))) {
+        if (!(strcmp("FR", channel_mask_token))) {
             mask |= SPEAKER_FRONT_RIGHT;
         }
 
-        if (!(strcmp("FC", chp))) {
+        if (!(strcmp("FC", channel_mask_token))) {
             mask |= SPEAKER_FRONT_CENTER;
         }
 
-        if (!(strcmp("LF", chp))) {
+        if (!(strcmp("LF", channel_mask_token))) {
             mask |= SPEAKER_LOW_FREQUENCY;
         }
 
-        if (!(strcmp("BL", chp))) {
+        if (!(strcmp("BL", channel_mask_token))) {
             mask |= SPEAKER_BACK_LEFT;
         }
 
-        if (!(strcmp("BR", chp))) {
+        if (!(strcmp("BR", channel_mask_token))) {
             mask |= SPEAKER_BACK_RIGHT;
         }
 
-        if (!(strcmp("FLOC", chp))) {
+        if (!(strcmp("FLOC", channel_mask_token))) {
             mask |= SPEAKER_FRONT_LEFT_OF_CENTER;
         }
 
-        if (!(strcmp("FROC", chp))) {
+        if (!(strcmp("FROC", channel_mask_token))) {
             mask |= SPEAKER_FRONT_RIGHT_OF_CENTER;
         }
 
-        if (!(strcmp("BC", chp))) {
+        if (!(strcmp("BC", channel_mask_token))) {
             mask |= SPEAKER_BACK_CENTER;
         }
 
-        if (!(strcmp("SL", chp))) {
+        if (!(strcmp("SL", channel_mask_token))) {
             mask |= SPEAKER_SIDE_LEFT;
         }
 
-        if (!(strcmp("SR", chp))) {
+        if (!(strcmp("SR", channel_mask_token))) {
             mask |= SPEAKER_SIDE_RIGHT;
         }
 
-        if (!(strcmp("TC", chp))) {
+        if (!(strcmp("TC", channel_mask_token))) {
             mask |= SPEAKER_TOP_CENTER;
         }
 
-        if (!(strcmp("TFL", chp))) {
+        if (!(strcmp("TFL", channel_mask_token))) {
             mask |= SPEAKER_TOP_FRONT_LEFT;
         }
 
-        if (!(strcmp("TFC", chp))) {
+        if (!(strcmp("TFC", channel_mask_token))) {
             mask |= SPEAKER_TOP_FRONT_CENTER;
         }
 
-        if (!(strcmp("TFR", chp))) {
+        if (!(strcmp("TFR", channel_mask_token))) {
             mask |= SPEAKER_TOP_FRONT_RIGHT;
         }
 
-        if (!(strcmp("TBL", chp))) {
+        if (!(strcmp("TBL", channel_mask_token))) {
             mask |= SPEAKER_TOP_BACK_LEFT;
         }
 
-        if (!(strcmp("TBC", chp))) {
+        if (!(strcmp("TBC", channel_mask_token))) {
             mask |= SPEAKER_TOP_BACK_CENTER;
         }
 
-        if (!(strcmp("TBR", chp))) {
+        if (!(strcmp("TBR", channel_mask_token))) {
             mask |= SPEAKER_TOP_BACK_RIGHT;
         }
 
-        if (!(strcmp("SPR", chp))) {
+        if (!(strcmp("SPR", channel_mask_token))) {
             mask |= SPEAKER_RESERVED;
         }
 
-        chp = strtok(NULL, ",.-");
+        channel_mask_token = strtok(NULL, ",.-");
     }
 
     *channel_mask = mask;
+    if (strlen(str) < MAX_CHAN_STRING) {
+        strcpy(channel_mask_str, str);
+    }
 
     return 0;
 }
 
-int get_music_note_frequency(char music_note[4], double* restrict f)
+int set_file_name(char* restrict file_name, char* restrict str)
+{
+    if (strlen(str) < MAX_STRING) {
+        strcpy(file_name, str);
+    } else {
+        fprintf(stderr, "\nOutput file name is too long, needs to be less than %d characters.\n", MAX_STRING);
+
+        return 1;
+    }
+
+    return 0;
+}
+
+int get_music_note_frequency(char music_note[MAX_NOTE_STRING], double* restrict f)
 {
     *f = 0.0f;
 
@@ -819,7 +853,7 @@ int get_music_note_frequency(char music_note[4], double* restrict f)
         *f = As_Bb8;
     }
     if (!(strcmp("B8", music_note))) {
-        *f = B6;
+        *f = B8;
     }
     if (!(strcmp("C9", music_note))) {
         *f = C9;
@@ -882,7 +916,12 @@ int set_file_name_generator(swavgen_config_t* restrict swavgen_config, char* res
     } 
     if (!(strncmp("custom", str, 6))) {
         swavgen_config->fgen = &generate_file_name_custom_format;
-        strcpy(swavgen_config->custom_string, str);
+        if (strlen(str) < MAX_STRING) {
+            strcpy(swavgen_config->custom_string, str);
+        } else {
+            fprintf(stderr, "\nCustom format string is too long, max is %d characters.\n", MAX_STRING);
+            return 1;
+        }
     } 
 
     if (!(swavgen_config->fgen)) {
@@ -1735,7 +1774,7 @@ char* get_date_string()
 {
     time_t time_since_epoch = time(NULL);
     struct tm* tm = localtime(&time_since_epoch);
-    static char s[13];
+    static char s[7];
     strftime(s, sizeof(s), "%d%m%y", tm);
 
     return s;
@@ -1745,7 +1784,7 @@ char* get_time_string()
 {
     time_t time_since_epoch = time(NULL);
     struct tm* tm = localtime(&time_since_epoch);
-    static char s[13];
+    static char s[7];
     strftime(s, sizeof(s), "%H%M%S", tm);
 
     return s;
@@ -1777,24 +1816,25 @@ int generate_file_name_properties_format(swavgen_config_t* restrict swavgen_conf
         strcat(prop_string_a, "-");
     }
 
-    sprintf(prop_string_b, "%s-%d-%.3lf-%d", 
+    sprintf(prop_string_b, "%s-%d-%.3lf-%d-", 
             swavgen_config->encodingstr, 
             swavgen_config->bytes_per_sample * 8, 
             swavgen_config->duration, 
             swavgen_config->channels
            );
 
-    if (swavgen_config->music_note[0] != 0) {
-        strcat(prop_string_b, "-");
+    if (swavgen_config->music_note[0] != '\0') {
         strcat(prop_string_b, swavgen_config->music_note);
+        strcat(prop_string_b, "-");
     }
 
     if (swavgen_config->extensible == 1) {
-        strcat(prop_string_a, "-");
         strcat(prop_string_b, swavgen_config->channel_mask_str);
     }
 
-    return sprintf(swavgen_config->file_name, "swavgen-output-%s%s.wav", prop_string_a, prop_string_b);
+    sprintf(swavgen_config->file_name, "swavgen-output-%s%s.wav", prop_string_a, prop_string_b);
+
+    return 0; 
 }
 
 int generate_file_name_custom_format(swavgen_config_t* restrict swavgen_config)
@@ -1807,7 +1847,7 @@ int generate_file_name_custom_format(swavgen_config_t* restrict swavgen_config)
         fprintf(stderr, "\nError splitting format string\n");
         return 1;
     }
-    
+
     memset(swavgen_config->file_name, '\0', sizeof(char) * MAX_STRING);
     char* format_token = strtok(format_string, "-");
     char strval[10];
@@ -1851,7 +1891,7 @@ int generate_file_name_custom_format(swavgen_config_t* restrict swavgen_config)
             found = 1;
         }
         if (!(strcmp("duration", format_token))) {
-            sprintf(strval, "%.3lf", swavgen_config->f); 
+            sprintf(strval, "%.3lf", swavgen_config->duration); 
             strcat(swavgen_config->file_name, strval);
             found = 1;
         }
@@ -1878,7 +1918,7 @@ int generate_file_name_custom_format(swavgen_config_t* restrict swavgen_config)
         }
 
         if (!found) {
-            fprintf(stderr, "Unkown format specifier '%s'.", format_token);
+            fprintf(stderr, "\nUnknown format specifier '%s'.\n", format_token);
             return 1;
         }
 
@@ -1889,8 +1929,6 @@ int generate_file_name_custom_format(swavgen_config_t* restrict swavgen_config)
 
     swavgen_config->file_name[strlen(swavgen_config->file_name) - 1] = '\0';
     strcat(swavgen_config->file_name, ".wav");
-
-    printf("%s", swavgen_config->file_name);
 
     return 0;
 }
@@ -1907,7 +1945,7 @@ int output_help()
             "General usage,\n"
             "'swavgen <Wave Type> [<Options>]', with an ability to choose between 'sine', 'square', 'triangle', 'saw' wave types. Use 'random' for some random white noise.\n\n"
             "Available options are,\n"
-            "\t-e,\t--encoding <Encoding>\t\t\t= Encoding used for sampled data. Available encodings are 'float' (64/32-bit), 'PCM' (signed/unsigned 8/16/24/32-bit), 'A-law', and 'Mu-law'.\n"
+            "\t-e,\t--encoding <Encoding>\t\t\t= Encoding used for sampled data. Available encodings are 'IEEE-float' (64/32-bit), 'PCM' (signed/unsigned 8/16/24/32-bit), 'A-law', and 'Mu-law'.\n"
             "\t-f,\t--frequency <Frequency [Hz]>\t\t= Input the wave frequency in Hertz.\n"
             "\t-T,\t--period <Time [ms]>\t\t\t= Input the wave period in milliseconds.\n"
             "\t-s,\t--sampling-frequency <Frequency [Hz]>\t= Wave sampling frequency in Hertz.\n"
