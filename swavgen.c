@@ -1951,7 +1951,7 @@ int output_help()
             "\t-s,\t--sampling-frequency <Frequency [Hz]>\t= Wave sampling frequency in Hertz.\n"
             "\t-d,\t--duration <Time [s]>\t\t\t= Wave duration in seconds.\n"
             "\t-n,\t--total-samples <Samples>\t\t= Wave total samples. Gets calculated in the tool with sampling frequency, duaration, and channels. Specifying any of those three options and also specifying the total samples can lead to issues.\n"
-            "\t-a,\t--amplitude <Amplitude>\t\t= Wave amplitude. Affects the amplitude of the generated wave before encoding, therefore it can have some strange effects in the encodings that expect values of -1 to +1.\n"
+            "\t-a,\t--amplitude <Amplitude>\t\t\t= Wave amplitude. Affects the amplitude of the generated wave before encoding, therefore it can have some strange effects in the encodings that expect values of -1 to +1.\n"
             "\t-l,\t--sample-length <Length [bits]>\t\t= Encoded wave sample length in bits. Must be divisible by 8.\n"
             "\t-r,\t--representation <Representation>\t= Choose between 'signed' and 'unsigned' PCM encoding.\n"
             "\t-c,\t--channels <Channels>\t\t\t= Choose the number of channels to be created.\n"
@@ -1962,7 +1962,7 @@ int output_help()
             "\t\t--raw\t\t\t\t\t= Output the data with no header information. Useful for only getting the data of the generated wave.\n"
             "\t\t--limit\t\t\t\t\t= Enable limiting so that the generated wave is limited from -1 to +1 prior to encoding.\n"
             "\t-b,\t--approx <Number of Waves>\t\t= Specify the using an amount of approximated waves using additive synthesis instead of pure digitally created waves.\n"
-            "\t\t--output-name-format <Format> = Specify the format of the output file name. Choose between 'date/time', 'properties', and 'custom'. Defaults to 'properties'. To use the 'custom' output format, specify with '--output-name-format custom:<SPECIFIERS>'. Separete any of the following specifiers with '-' to create a custom naming format, 'swavgen', 'output', 'type', 'frequency', 'sampling', 'representation', 'encoding', 'length', 'duration', 'channels', 'note', 'mask', 'date', and 'time'.\n"
+            "\t\t--output-name-format <Format>\t= Specify the format of the output file name. Choose between 'date/time', 'properties', and 'custom'. Defaults to 'properties'. To use the 'custom' output format, specify with '--output-name-format custom:<SPECIFIERS>'. Separete any of the following specifiers with '-' to create a custom naming format, 'swavgen', 'output', 'type', 'frequency', 'sampling', 'representation', 'encoding', 'length', 'duration', 'channels', 'note', 'mask', 'date', and 'time'.\n"
             );
 
     printf("\n\n\t\t\tCHANNEL MASK CODES\n\n"
