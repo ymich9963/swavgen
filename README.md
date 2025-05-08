@@ -42,9 +42,132 @@ The script downloads the executable, moves it to `C:\Program Files\swavgen\`, an
 Please the Building section. Use `make` to build from source.
 
 ## Usage
-Use `--help` option for a list of all the different parameters that can be changed. An example command for a 2-second 440 Hz square wave in 16-bit signed PCM encoding would be:
+The `--help` option which provides a list of the available commands is listed below, followed by example uses.
 
-```swavgen square -d 2.0 -f 440 -e PCM -l 16 -r signed```
+```
+General usage,
+'swavgen <Wave Type> [<Options>]', with an ability to choose between 'sine', 'square', 'triangle', 'saw' wave types. Use 'random' for some random white noise.
+
+Available options are,
+        -e,     --encoding <Encoding>                   = Encoding used for sampled data. Available encodings are 'IEEE-float' (64/32-bit), 'PCM' (signed/unsigned 8/16/24/32-bit), 'A-law', and 'Mu-law'.
+        -f,     --frequency <Frequency [Hz]>            = Input the wave frequency in Hertz.
+        -T,     --period <Time [ms]>                    = Input the wave period in milliseconds.
+        -s,     --sampling-frequency <Frequency [Hz]>   = Wave sampling frequency in Hertz.
+        -d,     --duration <Time [s]>                   = Wave duration in seconds.
+        -n,     --total-samples <Samples>               = Wave total samples. Gets calculated in the tool with sampling frequency, duaration, and channels. Specifying any of those three options and also specifying the total samples ca
+n lead to issues.
+        -a,     --amplitude <Amplitude>                 = Wave amplitude. Affects the amplitude of the generated wave before encoding, therefore it can have some strange effects in the encodings that expect values of -1 to +1.
+        -l,     --sample-length <Length [bits]>         = Encoded wave sample length in bits. Must be divisible by 8.
+        -r,     --representation <Representation>       = Choose between 'signed' and 'unsigned' PCM encoding.
+        -c,     --channels <Channels>                   = Choose the number of channels to be created.
+        -o,     --output <File Name>                    = Specify the output file name.
+        -x,     --extensible                            = Enable the extensible format type for WAV. Mandatory when specifying a channel mask or valid bits but otherwise only necessary for some media players.
+        -v,     --valid-bits <Valid Bits [bits]>        = Valid bits in the sample. Doesn't seem to do anything and is purely informational. Must be less than the sample length.
+        -m,     --channel-mask <Channel Mask Code>      = Specify the channel mask to be used for panning. The number of speaker locations specified should be the same as the number of channels. For example with '-c 2' an option of '-
+m FR,FL' should be used. All channel mask options are listed below, and should be separated with a comma, dash, or dot.
+                --raw                                   = Output the data with no header information. Useful for only getting the data of the generated wave.
+                --limit                                 = Enable limiting so that the generated wave is limited from -1 to +1 prior to encoding.
+        -b,     --approx <Number of Waves>              = Specify the using an amount of approximated waves using additive synthesis instead of pure digitally created waves.
+                --output-name-format <Format>           = Specify the format of the output file name. Choose between 'date/time', 'properties', and 'custom'. Defaults to 'properties'. To use the 'custom' output format, specify with '--output-na
+me-format custom:<SPECIFIERS>'. Separete any of the following specifiers with '-' to create a custom naming format, 'swavgen', 'output', 'type', 'frequency', 'sampling', 'representation', 'encoding', 'length', 'duration', 'channels', 
+'note', 'mask', 'date', and 'time'.
+
+
+                        CHANNEL MASK CODES
+
+                Front Left              FL
+                Front Right             FR
+                Front Centre            FC
+                Low Frequency           LF
+                Back Left               BL
+                Back Right              BR
+                Front Left Of Centre    FLOC
+                Front Right Of Centre   FROC
+                Back Centre             BC
+                Side Left               SL
+                Side Right              SR
+                Top Center              TC
+                Top Front Left          TFL
+                Top Front Center        TFC
+                Top Front Right         TFR
+                Top Back Left           TBL
+                Top Back Center         TBC
+                Top Back Right          TBR
+                Speaker Reserved        SPR
+
+
+Notes: Experimentally it was found that combinations from FL to SR work with headphones, therefore a max of 11 channels can be used with a channel mask. Also, channel mask does not affect the number of channels, but if using a channel
+ mask of TC and above, the channels covered by the TC< channel masks will not be played, even though the data is there. Swavgen has not been used on other speaker systems so it is unknown if this changes depending on what the generate
+d wave is played.
+
+
+
+                        CONVERSION HELPERS
+
+                --convert-double-to-PCM-8bit-signed <Value>
+                --convert-double-to-PCM-16bit-signed <Value>
+                --convert-double-to-PCM-24bit-signed <Value>
+                --convert-double-to-PCM-32bit-signed <Value>
+                --convert-double-to-PCM-8bit-unsigned <Value>
+                --convert-double-to-PCM-16bit-unsigned <Value>
+                --convert-double-to-PCM-24bit-unsigned <Value>
+                --convert-double-to-PCM-32bit-unsigned <Value>
+
+Note: <Value> must be between +1 and -1.
+
+                --convert-PCM-16bit-signed-to-A-law <Value>
+                --convert-PCM-16bit-signed-to-Mu-law <Value>
+
+Note: <Value> must be between 32767 and -32768.
+
+```
+
+### Example Uses
+Most basic usage of the tool would be to create a sine wave in a specific frequency, let's say 400 Hz,
+```
+swavgen sine -f 440
+```
+Default duration is 2 seconds, so let's change it to 5 seconds,
+```
+swavgen sine -f 440 -d 5
+```
+To reduce the file size you may want to change the encoding to signed 16-bit PCM.
+```
+swavgen sine -f 440 -d 5 -e PCM -r signed -l 16
+```
+Use `--raw` to output the generated data with no WAVE header data. This will not be playable by most audio players.
+```
+swavgen sine -f 440 -d 5 -e PCM -r signed -l 16 --raw
+```
+Let's change the command to output a triangle wave, approximated with 4 sine waves instead of digitally synthesised.
+```
+swavgen triangle -f 440 -d 5 -e PCM -r signed -l 16 --approx 4
+```
+Instead of specifying the frequency, you can use note names with `--note` instead. For example, 440Hz is A4,
+```
+swavgen triangle --note A4 -d 5 -e PCM -r signed -l 16 --approx 4
+```
+You must've noticed the long names by now, you can change the name by specifying `-o`,
+```
+swavgen triangle -f 440 -d 5 -e PCM -r signed -l 16 --approx 4 -o example.wav
+```
+Choose to use the formatting presets 'data/time' or 'properties' which is the default,
+```
+swavgen triangle -f 440 -d 5 -e PCM -r signed -l 16 --approx 4 --output-name-format date/time
+```
+Use a custom naming scheme with the options specified in `--help`,
+```
+swavgen triangle -f 440 -d 5 -e PCM -r signed -l 16 --approx 4 --output-name-format custom:frequency-date
+```
+Specify panning by using channel masks by using `-x` and `-m`,
+```
+swavgen sine -f 440 -x -m FR
+```
+
+Can use the conversion functions to convert between values in different encodings,
+```
+swavgen --convert-double-to-PCM-8bit-signed 0.1
+```
 
 ## Building
 Simply use the `make` command to build the executable.

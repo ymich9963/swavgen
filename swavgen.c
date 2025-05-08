@@ -1090,7 +1090,8 @@ void create_saw_approx(double** restrict samples, swavgen_config_t* restrict swa
     for (int k = 1; k <= swavgen_config->approx; k++) {
         for (int n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
             (*samples)[n] += -2 * swavgen_config->a * pow(-1, k) * sin(2 * M_PI * k * swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels)) / (k * M_PI);
-        } // encoding causes some samples to flip around, PCM encoding expects values of -1 to 1. Use float if that is not desired, but higher harmonics fix the issue, or amplitude = 0.5.
+        } 
+        //FIX: Encoding causes some samples to flip around, PCM encoding expects values of -1 to 1. Use float if that is not desired, but higher harmonics fix the issue, or amplitude = 0.5.
 
     }
 }
@@ -1735,6 +1736,7 @@ int output_raw(FILE* restrict file, void* restrict encoded_samples, swavgen_conf
     return 0;
 }
 
+// TODO: Add valid bits, approx., raw, and limit inputs to output file details
 int output_file_details(swavgen_config_t* restrict swavgen_config)
 {
     printf("\n\tFile Name:\t%s"
