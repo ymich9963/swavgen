@@ -1818,7 +1818,7 @@ int generate_file_name_properties_format(swavgen_config_t* restrict swavgen_conf
         strcat(prop_string_a, "-");
     }
 
-    sprintf(prop_string_b, "%s-%d-%.3lf-%d-", 
+    sprintf(prop_string_b, "%s-%d-%.3lf-%d", 
             swavgen_config->encodingstr, 
             swavgen_config->bytes_per_sample * 8, 
             swavgen_config->duration, 
@@ -1826,11 +1826,12 @@ int generate_file_name_properties_format(swavgen_config_t* restrict swavgen_conf
            );
 
     if (swavgen_config->music_note[0] != '\0') {
-        strcat(prop_string_b, swavgen_config->music_note);
         strcat(prop_string_b, "-");
+        strcat(prop_string_b, swavgen_config->music_note);
     }
 
     if (swavgen_config->extensible == 1) {
+        strcat(prop_string_b, "-");
         strcat(prop_string_b, swavgen_config->channel_mask_str);
     }
 
@@ -1841,7 +1842,6 @@ int generate_file_name_properties_format(swavgen_config_t* restrict swavgen_conf
 
 int generate_file_name_custom_format(swavgen_config_t* restrict swavgen_config)
 {
-    //TODO: Actually set a meaningful size to custom_string
     char* format_string = strtok(swavgen_config->custom_string, ":");
     format_string = strtok(NULL, ":");
 
