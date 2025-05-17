@@ -1,9 +1,9 @@
 /*
-swavgen : Simple Wave Generator.
-Copyright (C) 2024 Yiannis Michael (ymich9963)
+    swavgen : Simple Wave Generator.
+    Copyright (C) 2024 Yiannis Michael (ymich9963)
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "swavgen.h"
