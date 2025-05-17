@@ -4,7 +4,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 
 #include <stdint.h>
 #include <stdio.h>
@@ -218,95 +218,95 @@
 /* Check macros */
 /* Check response from sscanf */
 #define	CHECK_RES(x) ({ if (!(x)) { \
-							fprintf(stderr, "Argument entered was wrong...\n"); \
-							return 1; \
-						} \
-					  })
+        fprintf(stderr, "Argument entered was wrong...\n"); \
+        return 1; \
+        } \
+        })
 
 /* Check if value is between numerical limits */
 #define	CHECK_LIMITS_LONG(x) ({ if ((x) >= LVAL_MAX || (x) <= LVAL_MIN) { \
-									fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %d and %lld.\n", LVAL_MIN, LVAL_MAX); \
-									return 1; \
-								} \
-							  })
+        fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %d and %lld.\n", LVAL_MIN, LVAL_MAX); \
+        return 1; \
+        } \
+        })
 
 #define	CHECK_LIMITS_FLOAT(x) ({ if ((x) >= FVAL_MAX || (x) <= FVAL_MIN) { \
-									 fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %f and %f.\n", FVAL_MIN, FVAL_MAX); \
-									 return 1; \
-								 } \
-							   })
+        fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %f and %f.\n", FVAL_MIN, FVAL_MAX); \
+        return 1; \
+        } \
+        })
 
 #define	CHECK_LIMITS_UCHAR(x) ({ if ((x) >= UCHAR_VAL_MAX || (x) <= UCHAR_VAL_MIN) { \
-									 fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %d and %d.\n", UCHAR_VAL_MIN, UCHAR_VAL_MAX); \
-									 return 1; \
-								 } \
-							   })
+        fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %d and %d.\n", UCHAR_VAL_MIN, UCHAR_VAL_MAX); \
+        return 1; \
+        } \
+        })
 
 #define	CHECK_LIMITS_INT(x) ({ if ((x) > IVAL_MAX || (x) < IVAL_MIN) { \
-								   fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %d and %d.\n", IVAL_MIN, IVAL_MAX); \
-								   return 1; \
-							   } \
-							 })
+        fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %d and %d.\n", IVAL_MIN, IVAL_MAX); \
+        return 1; \
+        } \
+        })
 
 #define	CHECK_LIMITS_CONV(x) ({ if ((x) > 1 || (x) < -1) { \
-									fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %d and %d.\n", 1, -1); \
-									return 1; \
-								} \
-							  })
+        fprintf(stderr, "Detected numbers out of range for one of the options. Please check inputs and enter numbers between %d and %d.\n", 1, -1); \
+        return 1; \
+        } \
+        })
 
 /* Check if an error occured to exit program */
 #define	CHECK_ERR(x) ({ if ((x)) { \
-							exit(EXIT_FAILURE); \
-						} \
-					  })
+        exit(EXIT_FAILURE); \
+        } \
+        })
 
 /* Check if a function returns failure */
 #define	CHECK_RET(x) ({ if ((x)) { \
-							return 1; \
-						} \
-					  })
+        return 1; \
+        } \
+        })
 
 /* Check if write was succesful by comparing the expected and actual writes */
 #define	CHECK_WRITE(x, y) ({ if ((x != y)) { \
-								 return 1; \
-							 } \
-						   })
+        return 1; \
+        } \
+        })
 
 /* data Chunk */
 // FIX: Fit sampled_data into the struct.
 typedef struct Data_Chunk {
-	char chunkID[4];                        // "data"
-	uint32_t chunk_size;
+    char chunkID[4];                        // "data"
+    uint32_t chunk_size;
 } data_chunk_t;
 
 /* fact Chunk */
 typedef struct Fact_Chunk {
-	char chunkID[4];                        // "fact"
-	uint32_t chunk_size;
-	uint32_t dwSampleLength;
+    char chunkID[4];                        // "fact"
+    uint32_t chunk_size;
+    uint32_t dwSampleLength;
 } fact_chunk_t;
 
 /* Full format chunk */
 typedef struct Format_Chunk {
-	char chunkID[4];                        // "fmt "
-	uint32_t chunk_size;
-	uint16_t wFormatTag;
-	uint16_t nChannels;
-	uint32_t nSamplesPerSec;
-	uint32_t nAvgBytesPerSec;
-	uint16_t nBlockAlign;
-	uint16_t wBitsPerSample;
-	uint16_t cbSize;
-	uint16_t wValidBitsPerSample;
-	uint32_t dwChannelMask;
-	uint8_t SubFormat[16];
+    char chunkID[4];                        // "fmt "
+    uint32_t chunk_size;
+    uint16_t wFormatTag;
+    uint16_t nChannels;
+    uint32_t nSamplesPerSec;
+    uint32_t nAvgBytesPerSec;
+    uint16_t nBlockAlign;
+    uint16_t wBitsPerSample;
+    uint16_t cbSize;
+    uint16_t wValidBitsPerSample;
+    uint32_t dwChannelMask;
+    uint8_t SubFormat[16];
 } fmt_chunk_t;
 
 /* Main RIFF chunk */
 typedef struct RIFF_Chunk {
-	char chunkID[4];                        // "RIFF"
-	uint32_t chunk_size;                    // Number of chunks containing sample and format information
-	char waveID[4];                         // "WAVE"
+    char chunkID[4];                        // "RIFF"
+    uint32_t chunk_size;                    // Number of chunks containing sample and format information
+    char waveID[4];                         // "WAVE"
 } riff_chunk_t;
 
 typedef struct Swavgen_config swavgen_config_t;
@@ -316,8 +316,8 @@ typedef struct Swavgen_config {
     float a;                                // amplitude
     double f;                               // tone frequency
     uint32_t f_s;                           // sampling frequency
-	float duration;                         // wave duration
-	float T;                                // period, in ms
+    float duration;                         // wave duration
+    float T;                                // period, in ms
     uint8_t channels;
     size_t total_number_of_samples;
 
@@ -326,18 +326,18 @@ typedef struct Swavgen_config {
     uint64_t size;
 
     /* Used in WAVE headers */
-	uint8_t bytes_per_sample;
+    uint8_t bytes_per_sample;
     uint16_t encoding;
     uint16_t valid_bits;
     uint32_t channel_mask;
 
     /* Strings used internally */
-	char typestr[MAX_TYPE_STRING];
-	char representationstr[MAX_REPR_STRING];
-	char encodingstr[MAX_ENC_STRING];
-	char channel_mask_str[MAX_MASK_STRING];
-	char music_note[MAX_NOTE_STRING];
-	char custom_string[MAX_STRING];
+    char typestr[MAX_TYPE_STRING];
+    char representationstr[MAX_REPR_STRING];
+    char encodingstr[MAX_ENC_STRING];
+    char channel_mask_str[MAX_MASK_STRING];
+    char music_note[MAX_NOTE_STRING];
+    char custom_string[MAX_STRING];
 
     /* Number of waves used for approximation */ 
     uint8_t approx;
@@ -347,16 +347,16 @@ typedef struct Swavgen_config {
     char type;
     uint8_t padding;
     uint8_t extensible;
-	uint8_t raw;
-	uint8_t limit;
+    uint8_t raw;
+    uint8_t limit;
 
     /* Function members */
-	void (*defv)(swavgen_config_t*);                 // Set default values
-	void (*seth)(swavgen_config_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Set header values
-	void (*wave)(double**, swavgen_config_t*);       // Swavgen generation function
-	int (*encd)(double*, void**, swavgen_config_t*); // Encoding function
-	int (*fgen)(swavgen_config_t*);                  // File name generator 
-	int (*outp)(FILE*, void*, swavgen_config_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Output function
+    void (*defv)(swavgen_config_t*);                 // Set default values
+    void (*seth)(swavgen_config_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Set header values
+    void (*wave)(double**, swavgen_config_t*);       // Swavgen generation function
+    int (*encd)(double*, void**, swavgen_config_t*); // Encoding function
+    int (*fgen)(swavgen_config_t*);                  // File name generator 
+    int (*outp)(FILE*, void*, swavgen_config_t*, riff_chunk_t*, fmt_chunk_t*, fact_chunk_t*, data_chunk_t*); // Output function
 } swavgen_config_t;
 
 /**
