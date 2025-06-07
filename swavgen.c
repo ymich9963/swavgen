@@ -21,7 +21,7 @@ void set_defaults(swavgen_config_t* restrict swavgen_config)
     swavgen_config->file_name[0] = 0;
     swavgen_config->fgen = &generate_file_name_properties_format;
 
-    strcpy(swavgen_config->representationstr, "none"); 
+    strcpy(swavgen_config->representationstr, "signed"); 
     strcpy(swavgen_config->channel_mask_str, "none"); 
     strcpy(swavgen_config->encodingstr, "IEEE-float"); 
     strcpy(swavgen_config->music_note, "N0N"); 
@@ -1276,12 +1276,15 @@ int encode_pcm(double* restrict samples, void** restrict encoded_samples, swavge
                     break;
                 case 2:
                     encode_pcm_unsigned_16bit(samples, encoded_samples, swavgen_config);
+                    fprintf(stdout, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:\n", swavgen_config->bytes_per_sample * 8);
                     break;
                 case 3:
                     encode_pcm_unsigned_24bit(samples, encoded_samples, swavgen_config);
+                    fprintf(stdout, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:\n", swavgen_config->bytes_per_sample * 8);
                     break;
                 case 4:
                     encode_pcm_unsigned_32bit(samples, encoded_samples, swavgen_config);
+                    fprintf(stdout, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:\n", swavgen_config->bytes_per_sample * 8);
                     break;
                 default:
                     fprintf(stderr, "\nSample bits must be 8, 16, 24, or 32 for PCM. Please specify with '-l' or '--sample-length'.\n");
@@ -1289,7 +1292,6 @@ int encode_pcm(double* restrict samples, void** restrict encoded_samples, swavge
                     return 1;
             }
 
-            fprintf(stdout, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:\n", swavgen_config->bytes_per_sample);
             break;
         default:
             fprintf(stderr, "\nRepresentation not implemented. Please specify either 'signed' or 'unsigned' with '-r' or '--representation'.\n");
