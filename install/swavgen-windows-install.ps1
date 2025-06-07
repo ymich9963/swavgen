@@ -1,5 +1,5 @@
 $SWAVGEN_install_path = 'C:\Program Files\swavgen'
-$SWAVGEN_exe_link = "https://github.com/ymich9963/swavgen/releases/download/v1.1.0/swavgen.exe"
+$SWAVGEN_exe_link = "https://github.com/ymich9963/swavgen/releases/download/v1.1.1/swavgen.exe"
 
 if (Test-Path -Path $SWAVGEN_install_path) {
     Write-Output "Removing previously installed executable."
