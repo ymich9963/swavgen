@@ -6,7 +6,7 @@ if (Test-Path -Path $SWAVGEN_install_path) {
     Remove-Item $SWAVGEN_install_path -r # rm command
 }
 
-mkdir $SWAVGEN_install_path 
+New-Item -Path $SWAVGEN_install_path -ItemType Directory | Out-Null # make new dir and suppress output
 curl -fsSLO $SWAVGEN_exe_link
 Move-Item swavgen.exe $SWAVGEN_install_path # mv command
 Write-Output "Downloaded executable." # echo command
