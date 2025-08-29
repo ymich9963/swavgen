@@ -1,6 +1,3 @@
 build/
+results/
 examples/
-wave.wav
-test/build/
-test/results/
-formatted/
