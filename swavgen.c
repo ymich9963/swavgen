@@ -1743,13 +1743,13 @@ int output_file_details(swavgen_config_t* restrict swavgen_config)
 {
     printf("\n\tFile Name:\t%s"
             "\n\tWave Type:\t%s"
-            "\n\tSize:\t\t%llud\t[Bytes]"
+            "\n\tSize:\t\t%llu\t[Bytes]"
             "\n\tDuration:\t%.4f\t[s]"
             "\n\tEncoding:\t%s"
             "\n\tSampling Freq.:\t%u\t[Hz]"
             "\n\tTone Freq.:\t%.3f\t[Hz]"
             "\n\tWave Period:\t%.4f\t[ms]"
-            "\n\tTotal Samples:\t%lld"
+            "\n\tTotal Samples:\t%llu"
             "\n\tChannels:\t%d"
             "\n\tSample Length:\t%d\t[bits]"
             , swavgen_config->file_name, swavgen_config->typestr, swavgen_config->size, swavgen_config->duration, swavgen_config->encodingstr, swavgen_config->f_s, swavgen_config->f, swavgen_config->T, swavgen_config->total_number_of_samples, swavgen_config->channels, swavgen_config->bytes_per_sample * 8);
