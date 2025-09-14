@@ -1023,7 +1023,7 @@ void create_sine(double** restrict samples, swavgen_config_t* restrict swavgen_c
 {
     *samples = calloc(swavgen_config->total_number_of_samples * swavgen_config->channels, sizeof(double));
 
-    for (int n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
+    for (size_t n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
         (*samples)[n] = swavgen_config->a * sin((2 * M_PI * swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels)));
     }
 }
@@ -1033,7 +1033,7 @@ void create_square(double** restrict samples, swavgen_config_t* restrict swavgen
     double sample;
     *samples = calloc(swavgen_config->total_number_of_samples * swavgen_config->channels, sizeof(double));
 
-    for (int n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
+    for (size_t n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
         sample = sin(2 * M_PI * swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels));
         (*samples)[n] = swavgen_config->a * (double) sgn(sample);
     }
@@ -1044,7 +1044,7 @@ void create_square_approx(double** restrict samples, swavgen_config_t* restrict 
     *samples = calloc(swavgen_config->total_number_of_samples * swavgen_config->channels, sizeof(double));
 
     for (int k = 0; k <= swavgen_config->approx; k++) {
-        for (int n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
+        for (size_t n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
             (*samples)[n] += swavgen_config->a * sin(2 * M_PI * (2 * k + 1) * swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels)) / (2 * k + 1);
         }
     }
@@ -1055,7 +1055,7 @@ void create_triangle(double** restrict samples, swavgen_config_t* restrict swavg
     *samples = calloc(swavgen_config->total_number_of_samples * swavgen_config->channels, sizeof(double));
 
     /* Two implementations. Not sure which one is best. */
-    for (int n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
+    for (size_t n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
         (*samples)[n] = (2 * swavgen_config->a / M_PI) * asin(sin(2 * M_PI * swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels)));
         /* (*samples)[n] = swavgen_config->a * (4 * fabs(((double)swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels)) - (int)(((double)swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels)) + 0.5f )) - 1); */
     }
@@ -1066,7 +1066,7 @@ void create_triangle_approx(double** restrict samples, swavgen_config_t* restric
     *samples = calloc(swavgen_config->total_number_of_samples * swavgen_config->channels, sizeof(double));
 
     for (int k = 0; k <= swavgen_config->approx; k++) {
-        for (int n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
+        for (size_t n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
             (*samples)[n] += swavgen_config->a * 8 * pow(-1, k) * sin(2 * M_PI * (2 * k + 1) * swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels)) / pow((2 * k + 1) * M_PI, 2);
         }
     }
@@ -1077,7 +1077,7 @@ void create_saw(double** restrict samples, swavgen_config_t* restrict swavgen_co
     *samples = calloc(swavgen_config->total_number_of_samples * swavgen_config->channels, sizeof(double));
 
     /* Two implementations. Not sure which one is best. */
-    for (int n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
+    for (size_t n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
         /* (*samples)[n] = swavgen_config->a * (((double)swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels)) - (int)((double)swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels))); */
         (*samples)[n] = swavgen_config->a * (2 * (((double) swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels)) - (int) (0.5f + ((double) swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels)))));
     }
@@ -1088,7 +1088,7 @@ void create_saw_approx(double** restrict samples, swavgen_config_t* restrict swa
     *samples = calloc(swavgen_config->total_number_of_samples * swavgen_config->channels, sizeof(double));
 
     for (int k = 1; k <= swavgen_config->approx; k++) {
-        for (int n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
+        for (size_t n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
             (*samples)[n] += -2 * swavgen_config->a * pow(-1, k) * sin(2 * M_PI * k * swavgen_config->f * n / (swavgen_config->f_s * swavgen_config->channels)) / (k * M_PI);
         } 
         //FIX: Encoding causes some samples to flip around, PCM encoding expects values of -1 to 1. Use float if that is not desired, but higher harmonics fix the issue, or amplitude = 0.5.
@@ -1101,7 +1101,7 @@ void create_random(double** restrict samples, swavgen_config_t* restrict swavgen
     srand(time(NULL)); // Initialise the random seed based on the current time
     *samples = calloc(swavgen_config->total_number_of_samples * swavgen_config->channels, sizeof(double));
 
-    for (int n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
+    for (size_t n = 0; n < swavgen_config->total_number_of_samples * swavgen_config->channels; n++) {
         (*samples)[n] = (2 * (double) rand() / RAND_MAX) - 1;
     }
 }
@@ -1743,7 +1743,7 @@ int output_file_details(swavgen_config_t* restrict swavgen_config)
 {
     printf("\n\tFile Name:\t%s"
             "\n\tWave Type:\t%s"
-            "\n\tSize:\t\t%lld\t[Bytes]"
+            "\n\tSize:\t\t%llud\t[Bytes]"
             "\n\tDuration:\t%.4f\t[s]"
             "\n\tEncoding:\t%s"
             "\n\tSampling Freq.:\t%u\t[Hz]"

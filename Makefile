@@ -1,7 +1,7 @@
 TARGET := swavgen
 BUILD_DIR := ./build
 OBJECTS := main.o $(TARGET).o
-CFLAGS := -Wall -O3
+CFLAGS := -Wextra -Wall -Wno-unused-parameter -O3
 CC := clang
 .DELETE_ON_ERROR:
 .SILENT:
