@@ -21,7 +21,6 @@
 // TODO: Implement more formats like IMA ADPCM, GSM, etc.
 // TODO: Add tool details to the generated .wav file.
 // TODO: Add phase shift option. 
-// FIX: Popping when playing and stopping the sound files.
 
 int main(int argc, char** argv)
 {

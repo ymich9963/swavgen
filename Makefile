@@ -2,7 +2,6 @@ TARGET := swavgen
 BUILD_DIR := ./build
 OBJECTS := main.o $(TARGET).o
 CFLAGS := -Wall -O3
-LIB := -lsndfile
 CC := clang
 .DELETE_ON_ERROR:
 .SILENT:
@@ -10,7 +9,7 @@ CC := clang
 .PHONY: all clean tests coverage
 
 all: $(OBJECTS)
-	$(CC) -o $(BUILD_DIR)/$(TARGET) $(foreach obj, $(OBJECTS), $(BUILD_DIR)/$(obj)) $(CFLAGS) $(LIB);
+	$(CC) -o $(BUILD_DIR)/$(TARGET) $(foreach obj, $(OBJECTS), $(BUILD_DIR)/$(obj)) $(CFLAGS);
 	echo "Executable compiled with $(CC) $(CFLAGS)"
 
 $(OBJECTS): %.o: %.c build
