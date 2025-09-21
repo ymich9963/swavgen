@@ -39,6 +39,7 @@ void set_defaults(swavgen_config_t* restrict swavgen_config)
     swavgen_config->extensible = 0;
     swavgen_config->raw = 0;
     swavgen_config->limit = 0;
+    swavgen_config->quiet = 0;
 }
 
 int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavgen_config)
@@ -213,6 +214,11 @@ int get_options(int argc, char** restrict argv, swavgen_config_t* restrict swavg
 
         if (!(strcmp("--limit", argv[i]))) {
             swavgen_config->limit = 1;
+            continue;
+        }
+
+        if (!(strcmp("-q", argv[i])) || !(strcmp("--quiet", argv[i]))) {
+            swavgen_config->quiet = 1;
             continue;
         }
 
@@ -1276,15 +1282,12 @@ int encode_pcm(double* restrict samples, void** restrict encoded_samples, swavge
                     break;
                 case 2:
                     encode_pcm_unsigned_16bit(samples, encoded_samples, swavgen_config);
-                    fprintf(stdout, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:\n", swavgen_config->bytes_per_sample * 8);
                     break;
                 case 3:
                     encode_pcm_unsigned_24bit(samples, encoded_samples, swavgen_config);
-                    fprintf(stdout, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:\n", swavgen_config->bytes_per_sample * 8);
                     break;
                 case 4:
                     encode_pcm_unsigned_32bit(samples, encoded_samples, swavgen_config);
-                    fprintf(stdout, "\n\nUnsigned %d-bit PCM isn't supported by the WAVE format but sure here you go:\n", swavgen_config->bytes_per_sample * 8);
                     break;
                 default:
                     fprintf(stderr, "\nSample bits must be 8, 16, 24, or 32 for PCM. Please specify with '-l' or '--sample-length'.\n");
@@ -1738,7 +1741,6 @@ int output_raw(FILE* restrict file, void* restrict encoded_samples, swavgen_conf
     return 0;
 }
 
-// TODO: Add valid bits, approx., raw, and limit inputs to output file details
 int output_file_details(swavgen_config_t* restrict swavgen_config)
 {
     printf("\n\tFile Name:\t%s"
@@ -1768,6 +1770,10 @@ int output_file_details(swavgen_config_t* restrict swavgen_config)
             "\n\tChannel Mask:\t%s"
             : "\r"
             , swavgen_config->channel_mask_str);
+    
+    if (swavgen_config->representation == 'u' && swavgen_config->bytes_per_sample != 1) {
+        printf("\n\nWARNING: Unsigned %d-bit PCM isn't supported by the WAVE format but sure here you go.\n", swavgen_config->bytes_per_sample * 8);
+    }
 
     printf("\n\n");
 

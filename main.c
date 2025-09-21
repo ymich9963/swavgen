@@ -21,6 +21,7 @@
 // TODO: Implement more formats like IMA ADPCM, GSM, etc.
 // TODO: Add tool details to the generated .wav file.
 // TODO: Add phase shift option. 
+// TODO: Add valid bits, approx., raw, and limit inputs to output file details
 
 int main(int argc, char** argv)
 {
@@ -67,7 +68,9 @@ int main(int argc, char** argv)
     /* Final file size */
     swavgen_config.size = riff_chunk.chunk_size + sizeof(riff_chunk.chunkID);
 
-    output_file_details(&swavgen_config);
+    if (!swavgen_config.quiet) {
+        output_file_details(&swavgen_config);
+    }
 
     free(samples);
     free(encoded_samples);
