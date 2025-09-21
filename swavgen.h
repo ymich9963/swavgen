@@ -16,7 +16,7 @@
 #include <time.h>
 
 #define	WELCOME_STR "swavgen : Simple Swavgen Generator\nBy Yiannis Michael (ymich9963).\n\nTo generate your first sound file, you must specify the wave type with 'swavgen <type>'. This generates a 1 channel, 2 second, 440 Hz wave with IEEE-float 64-bit encoding at 48 kHz. Use the '--help' option for a list of all the settings.\n\n" "This program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n"
-#define	VERSION_STR "swavgen : Version 1.1.4\nBy Yiannis Michael (ymich9963).\n\n"
+#define	VERSION_STR "swavgen : Version 1.1.5\nBy Yiannis Michael (ymich9963).\n\n"
 
 /* Standard format codes */
 #define	WAVE_FORMAT_PCM 0x0001          // PCM
