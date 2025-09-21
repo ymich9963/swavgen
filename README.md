@@ -62,6 +62,7 @@ n lead to issues.
         -c,     --channels <Channels>                   = Choose the number of channels to be created.
         -o,     --output <File Name>                    = Specify the output file name.
         -x,     --extensible                            = Enable the extensible format type for WAV. Mandatory when specifying a channel mask or valid bits but otherwise only necessary for some media players.
+        -q,     --quiet                                 = Silence output. Errors are still shown.
         -v,     --valid-bits <Valid Bits [bits]>        = Valid bits in the sample. Doesn't seem to do anything and is purely informational. Must be less than the sample length.
         -m,     --channel-mask <Channel Mask Code>      = Specify the channel mask to be used for panning. The number of speaker locations specified should be the same as the number of channels. For example with '-c 2' an option of '-
 m FR,FL' should be used. All channel mask options are listed below, and should be separated with a comma, dash, or dot.
