@@ -1967,6 +1967,7 @@ int output_help()
             "\t-c,\t--channels <Channels>\t\t\t= Choose the number of channels to be created.\n"
             "\t-o,\t--output <File Name>\t\t\t= Specify the output file name.\n"
             "\t-x,\t--extensible\t\t\t\t= Enable the extensible format type for WAV. Mandatory when specifying a channel mask or valid bits but otherwise only necessary for some media players.\n"
+            "\t-q,\t--quiet\t\t\t\t\t= Silence output. Errors are still shown.\n"
             "\t-v,\t--valid-bits <Valid Bits [bits]>\t= Valid bits in the sample. Doesn't seem to do anything and is purely informational. Must be less than the sample length.\n"
             "\t-m,\t--channel-mask <Channel Mask Code>\t= Specify the channel mask to be used for panning. The number of speaker locations specified should be the same as the number of channels. For example with '-c 2' an option of '-m FR,FL' should be used. All channel mask options are listed below, and should be separated with a comma, dash, or dot.\n"
             "\t\t--raw\t\t\t\t\t= Output the data with no header information. Useful for only getting the data of the generated wave.\n"
